@@ -12,13 +12,15 @@
 #include "operationshistorywindow.h"
 #include "shipmentformwindow.h"
 #include "transferformwindow.h"
+#include "exceptionhandler.h" // Добавляем заголовок для обработки исключений
 
 SectionWindow::SectionWindow(int sectionNumber, const QString& materialType,
                              bool isAdmin, const QString& mode, UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_sectionNumber(sectionNumber), m_materialType(materialType),
     m_isAdmin(isAdmin), m_mode(mode), m_userManager(userManager)
 {
-    m_productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
+    TRY_CATCH_BEGIN
+        m_productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
     m_historyFile = QString("operations_history/section_history_%1.bin").arg(sectionNumber);
 
     setupUI();
@@ -41,14 +43,26 @@ SectionWindow::SectionWindow(int sectionNumber, const QString& materialType,
     if (m_isAdmin && m_mode == "view") {
         setupContextMenu();
     }
+    TRY_CATCH_END
 }
 
 void SectionWindow::setupUI()
 {
-    centralWidget = new QWidget(this);
+    TRY_CATCH_BEGIN
+        centralWidget = new QWidget(this);
+    if (!centralWidget) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания центрального виджета",
+                        "Не удалось создать центральный виджет окна секции");
+    }
     setCentralWidget(centralWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    if (!mainLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания главного макета",
+                        "Не удалось создать главный макет окна секции");
+    }
     mainLayout->setSpacing(15);
     mainLayout->setContentsMargins(30, 20, 30, 20);
 
@@ -57,6 +71,11 @@ void SectionWindow::setupUI()
     topLayout->setContentsMargins(0, 0, 0, 0);
 
     backButton = new QPushButton("← Назад");
+    if (!backButton) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания кнопки 'Назад'",
+                        "Не удалось создать кнопку возврата");
+    }
     backButton->setFixedSize(100, 35);
 
     QWidget *titleWidget = new QWidget();
@@ -65,9 +84,19 @@ void SectionWindow::setupUI()
     titleLayout->setSpacing(2);
 
     titleLabel = new QLabel(QString("СЕКЦИЯ №%1 - %2").arg(m_sectionNumber).arg(m_materialType));
+    if (!titleLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания заголовка",
+                        "Не удалось создать метку заголовка");
+    }
     titleLabel->setAlignment(Qt::AlignCenter);
 
     occupancyLabel = new QLabel();
+    if (!occupancyLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания метки заполненности",
+                        "Не удалось создать метку для отображения заполненности");
+    }
     occupancyLabel->setAlignment(Qt::AlignCenter);
     occupancyLabel->setMinimumHeight(20);
 
@@ -75,6 +104,11 @@ void SectionWindow::setupUI()
     titleLayout->addWidget(occupancyLabel);
 
     QPushButton *operationsHistoryButton = new QPushButton("История операций");
+    if (!operationsHistoryButton) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания кнопки истории операций",
+                        "Не удалось создать кнопку истории операций");
+    }
     operationsHistoryButton->setFixedSize(180, 35);
 
     topLayout->addWidget(backButton);
@@ -89,13 +123,28 @@ void SectionWindow::setupUI()
     searchLayout->setSpacing(10);
 
     QLabel *searchLabel = new QLabel("Поиск:");
+    if (!searchLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания метки поиска",
+                        "Не удалось создать метку для поиска");
+    }
     searchLabel->setFixedSize(50, 30);
 
     searchEdit = new QLineEdit();
+    if (!searchEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля поиска",
+                        "Не удалось создать поле ввода для поиска");
+    }
     searchEdit->setPlaceholderText("Введите текст для поиска...");
     searchEdit->setFixedHeight(30);
 
     searchComboBox = new QComboBox();
+    if (!searchComboBox) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания комбобокса поиска",
+                        "Не удалось создать комбобокс для критериев поиска");
+    }
     searchComboBox->addItem("Номер ячейки");
     searchComboBox->addItem("Название товара");
     searchComboBox->addItem("Индекс товара");
@@ -109,6 +158,11 @@ void SectionWindow::setupUI()
     searchLayout->addWidget(searchComboBox);
 
     productsTable = new QTableWidget();
+    if (!productsTable) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания таблицы товаров",
+                        "Не удалось создать таблицу для отображения товаров");
+    }
     productsTable->setColumnCount(5);
     productsTable->setHorizontalHeaderLabels({"Номер ячейки", "Название товара", "Индекс товара", "Количество", "Поставщик"});
 
@@ -165,6 +219,7 @@ void SectionWindow::setupUI()
         modeHintLabel->setStyleSheet("color: #f39c12; font-size: 12px; font-weight: bold; padding: 5px;");
         mainLayout->insertWidget(3, modeHintLabel);
     }
+    TRY_CATCH_END
 }
 
 void SectionWindow::applyStyle()
@@ -302,7 +357,8 @@ void SectionWindow::applyStyle()
 
 void SectionWindow::updateOccupancyLabel()
 {
-    int occupied = m_allProducts.size();
+    TRY_CATCH_BEGIN
+        int occupied = m_allProducts.size();
     QString occupancyText = QString("Заполнено: %1/%2 ячеек").arg(occupied).arg(MAX_CELLS);
 
     double percentage = (double)occupied / MAX_CELLS * 100;
@@ -315,10 +371,12 @@ void SectionWindow::updateOccupancyLabel()
     }
 
     occupancyLabel->setText(occupancyText);
+    TRY_CATCH_END
 }
 
 void SectionWindow::loadProducts()
 {
+    TRY_CATCH_BEGIN
     QDir().mkpath("sections");
     QDir().mkpath("operations_history");
 
@@ -339,26 +397,33 @@ void SectionWindow::loadProducts()
             createInitialTestData();
         }
     }
+
     m_allProducts = m_products;
     updateOccupancyLabel();
+    TRY_CATCH_END
 }
 
 void SectionWindow::saveProducts()
 {
-    QFile file(m_productsFile);
-    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);
-        out << static_cast<quint32>(m_products.size());
-        for (const Product& product : m_products) {
-            out << product;
-        }
-        file.close();
+    TRY_CATCH_BEGIN
+        QFile file(m_productsFile);
+    if (!file.open(QIODevice::WriteOnly)) {
+        THROW_FILE_ERROR(m_productsFile, "открытия для записи",
+                         "Не удалось сохранить список товаров");
     }
+    QDataStream out(&file);
+    out << static_cast<quint32>(m_products.size());
+    for (const Product& product : m_products) {
+        out << product;
+    }
+    file.close();
+    TRY_CATCH_END
 }
 
 void SectionWindow::loadOperationsHistory()
 {
-    QFile file(m_historyFile);
+    TRY_CATCH_BEGIN
+        QFile file(m_historyFile);
     if (file.open(QIODevice::ReadOnly)) {
         QDataStream in(&file);
         quint32 size;
@@ -370,39 +435,73 @@ void SectionWindow::loadOperationsHistory()
         }
         file.close();
     }
+    TRY_CATCH_END
 }
 
 void SectionWindow::saveOperationsHistory()
 {
-    QFile file(m_historyFile);
-    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);
-        out << static_cast<quint32>(m_operationsHistory.size());
-        for (const Operation& operation : m_operationsHistory) {
-            out << operation;
-        }
-        file.close();
+    TRY_CATCH_BEGIN
+        QFile file(m_historyFile);
+    if (!file.open(QIODevice::WriteOnly)) {
+        THROW_FILE_ERROR(m_historyFile, "открытия для записи",
+                         "Не удалось сохранить историю операций");
     }
+    QDataStream out(&file);
+    out << static_cast<quint32>(m_operationsHistory.size());
+    for (const Operation& operation : m_operationsHistory) {
+        out << operation;
+    }
+    file.close();
+    TRY_CATCH_END
 }
 
 void SectionWindow::updateTable()
 {
+    TRY_CATCH_BEGIN
+        // Временно отключаем сортировку, чтобы не сбивать порядок при обновлении
+        productsTable->setSortingEnabled(false);
+
     productsTable->setRowCount(m_products.size());
 
     for (int i = 0; i < m_products.size(); ++i) {
         const Product& product = m_products.at(i);
 
         QTableWidgetItem *cellItem = new QTableWidgetItem();
+        if (!cellItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            QString("Не удалось создать элемент для ячейки %1").arg(i));
+        }
         cellItem->setData(Qt::DisplayRole, product.getCellNumber());
 
         QTableWidgetItem *nameItem = new QTableWidgetItem(product.getName());
+        if (!nameItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            QString("Не удалось создать элемент для названия товара %1").arg(i));
+        }
 
         QTableWidgetItem *indexItem = new QTableWidgetItem(product.getIndex());
+        if (!indexItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            QString("Не удалось создать элемент для индекса товара %1").arg(i));
+        }
 
         QTableWidgetItem *quantityItem = new QTableWidgetItem();
+        if (!quantityItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            QString("Не удалось создать элемент для количества товара %1").arg(i));
+        }
         quantityItem->setData(Qt::DisplayRole, product.getQuantity());
 
         QTableWidgetItem *supplierItem = new QTableWidgetItem(product.getSupplier());
+        if (!supplierItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            QString("Не удалось создать элемент для поставщика товара %1").arg(i));
+        }
 
         productsTable->setItem(i, 0, cellItem);
         productsTable->setItem(i, 1, nameItem);
@@ -410,6 +509,13 @@ void SectionWindow::updateTable()
         productsTable->setItem(i, 3, quantityItem);
         productsTable->setItem(i, 4, supplierItem);
     }
+
+    // Включаем сортировку обратно
+    productsTable->setSortingEnabled(true);
+
+    // Восстанавливаем сортировку по номеру ячейки
+    productsTable->sortByColumn(0, Qt::AscendingOrder);
+    TRY_CATCH_END
 }
 
 int SectionWindow::countOccupiedCells() const
@@ -429,7 +535,8 @@ void SectionWindow::onSearchCriteriaChanged(int index)
 
 void SectionWindow::filterTable(const QString& searchText, int searchCriteria)
 {
-    if (searchText.isEmpty()) {
+    TRY_CATCH_BEGIN
+        if (searchText.isEmpty()) {
         m_products = m_allProducts;
     } else {
         m_products.clear();
@@ -459,25 +566,41 @@ void SectionWindow::filterTable(const QString& searchText, int searchCriteria)
     }
 
     updateTable();
+    TRY_CATCH_END
 }
 
 void SectionWindow::onBackClicked()
 {
-    WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, m_mode, m_userManager);
+    TRY_CATCH_BEGIN
+        WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, m_mode, m_userManager);
+    if (!warehouseWindow) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания окна склада",
+                        "Не удалось создать экземпляр WarehouseWindow");
+    }
     warehouseWindow->show();
     this->close();
+    TRY_CATCH_END
 }
 
 void SectionWindow::onOperationsHistoryClicked()
 {
-    OperationsHistoryWindow *historyWindow = new OperationsHistoryWindow(m_sectionNumber, m_materialType, m_isAdmin, m_userManager);
+    TRY_CATCH_BEGIN
+        OperationsHistoryWindow *historyWindow = new OperationsHistoryWindow(m_sectionNumber, m_materialType, m_isAdmin, m_mode, m_userManager);
+    if (!historyWindow) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания окна истории операций",
+                        "Не удалось создать экземпляр OperationsHistoryWindow");
+    }
     historyWindow->show();
     this->close();
+    TRY_CATCH_END
 }
 
 void SectionWindow::createInitialTestData()
 {
-    m_products.clear();
+    TRY_CATCH_BEGIN
+        m_products.clear();
     m_operationsHistory.clear();
 
     if (m_sectionNumber == 1) {
@@ -511,11 +634,19 @@ void SectionWindow::createInitialTestData()
     saveOperationsHistory();
     updateTable();
     updateOccupancyLabel();
+    TRY_CATCH_END
 }
 
 void SectionWindow::onCellDoubleClicked(int row, int column)
 {
     if (!m_isAdmin || column == 0 || m_mode != "view") {
+        return;
+    }
+
+    // Получаем реальный индекс данных из визуальной строки
+    int dataIndex = getDataIndexFromVisualRow(row);
+    if (dataIndex == -1) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось найти товар для редактирования");
         return;
     }
 
@@ -550,9 +681,8 @@ void SectionWindow::onCellDoubleClicked(int row, int column)
     }
 
     if (ok && !newValue.isEmpty()) {
-        if (validateCellEdit(row, column, newValue)) {
-            updateProductData(row, column, newValue);
-            saveProducts();
+        if (validateCellEdit(dataIndex, column, newValue)) {
+            updateProductData(dataIndex, column, newValue);
             QMessageBox::information(this, "Успех", "Данные успешно обновлены!");
         }
     }
@@ -613,7 +743,9 @@ bool SectionWindow::validateCellEdit(int row, int column, const QString& newValu
 
 void SectionWindow::updateProductData(int row, int column, const QString& newValue)
 {
-    Product& product = m_products[row];
+    TRY_CATCH_BEGIN
+        // row - это индекс в m_products, а не визуальная строка
+        Product& product = m_products[row];
 
     switch(column) {
     case 1:
@@ -630,6 +762,7 @@ void SectionWindow::updateProductData(int row, int column, const QString& newVal
         break;
     }
 
+    // Обновляем также в m_allProducts
     for (int i = 0; i < m_allProducts.size(); ++i) {
         if (m_allProducts[i].getCellNumber() == product.getCellNumber()) {
             m_allProducts[i] = product;
@@ -637,13 +770,29 @@ void SectionWindow::updateProductData(int row, int column, const QString& newVal
         }
     }
 
+    // Сохраняем изменения
+    saveProducts();
+
+    // ОБНОВЛЯЕМ ТАБЛИЦУ
     updateTable();
+    TRY_CATCH_END
 }
 
 void SectionWindow::setupContextMenu()
 {
-    contextMenu = new QMenu(this);
+    TRY_CATCH_BEGIN
+        contextMenu = new QMenu(this);
+    if (!contextMenu) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания контекстного меню",
+                        "Не удалось создать контекстное меню для таблицы товаров");
+    }
     QAction *deleteAction = new QAction("Удалить товар", this);
+    if (!deleteAction) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания действия меню",
+                        "Не удалось создать действие удаления для контекстного меню");
+    }
     connect(deleteAction, &QAction::triggered, this, &SectionWindow::onDeleteProduct);
     contextMenu->addAction(deleteAction);
 
@@ -653,19 +802,28 @@ void SectionWindow::setupContextMenu()
 
         QTableWidgetItem *item = productsTable->itemAt(pos);
         if (item) {
-            selectedRow = item->row();
+            selectedRow = item->row(); // Сохраняем визуальную строку
             contextMenu->exec(productsTable->viewport()->mapToGlobal(pos));
         }
     });
+    TRY_CATCH_END
 }
 
 void SectionWindow::onDeleteProduct()
 {
-    if (selectedRow < 0 || selectedRow >= m_products.size()) {
+    TRY_CATCH_BEGIN
+        if (selectedRow < 0 || selectedRow >= productsTable->rowCount()) {
         return;
     }
 
-    const Product& product = m_products.at(selectedRow);
+    // Получаем реальный индекс данных из визуальной строки
+    int dataIndex = getDataIndexFromVisualRow(selectedRow);
+    if (dataIndex == -1) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось найти товар для удаления");
+        return;
+    }
+
+    const Product& product = m_products.at(dataIndex);
     QString productInfo = QString("Ячейка: %1\nНазвание: %2\nИндекс: %3\nКоличество: %4\nПоставщик: %5")
                               .arg(product.getCellNumber())
                               .arg(product.getName())
@@ -681,9 +839,11 @@ void SectionWindow::onDeleteProduct()
         );
 
     if (reply == QMessageBox::Yes) {
-        int cellNumber = m_products[selectedRow].getCellNumber();
-        m_products.removeAt(selectedRow);
+        // Удаляем из обоих списков по реальному индексу
+        int cellNumber = m_products[dataIndex].getCellNumber();
+        m_products.removeAt(dataIndex);
 
+        // Удаляем из m_allProducts по номеру ячейки
         for (int i = 0; i < m_allProducts.size(); ++i) {
             if (m_allProducts[i].getCellNumber() == cellNumber) {
                 m_allProducts.removeAt(i);
@@ -699,32 +859,73 @@ void SectionWindow::onDeleteProduct()
     }
 
     selectedRow = -1;
+    TRY_CATCH_END
 }
 
 void SectionWindow::onShipmentClicked(int row, int column)
 {
-    if (row < 0 || row >= m_products.size()) {
+    TRY_CATCH_BEGIN
+        // Получаем реальный индекс данных из визуальной строки
+        int dataIndex = getDataIndexFromVisualRow(row);
+    if (dataIndex == -1) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось найти товар для отгрузки");
         return;
     }
 
-    const Product& product = m_products.at(row);
+    const Product& product = m_products.at(dataIndex);
 
     ShipmentFormWindow *shipmentForm = new ShipmentFormWindow(product, m_sectionNumber, m_isAdmin, m_userManager);
+    if (!shipmentForm) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания окна отгрузки",
+                        "Не удалось создать экземпляр ShipmentFormWindow");
+    }
     shipmentForm->show();
     this->close();
+    TRY_CATCH_END
 }
 
 void SectionWindow::onTransferClicked(int row, int column)
 {
-    if (row < 0 || row >= m_products.size()) {
+    TRY_CATCH_BEGIN
+        // Получаем реальный индекс данных из визуальной строки
+        int dataIndex = getDataIndexFromVisualRow(row);
+    if (dataIndex == -1) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось найти товар для трансфера");
         return;
     }
 
-    const Product& product = m_products.at(row);
+    const Product& product = m_products.at(dataIndex);
 
-    // Исправляем m_sourceSectionNumber на m_sectionNumber
     TransferFormWindow *transferForm = new TransferFormWindow(product, m_sectionNumber,
                                                               m_materialType, m_isAdmin, m_userManager);
+    if (!transferForm) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания окна трансфера",
+                        "Не удалось создать экземпляр TransferFormWindow");
+    }
     transferForm->show();
     this->close();
+    TRY_CATCH_END
+}
+
+int SectionWindow::getDataIndexFromVisualRow(int visualRow) const
+{
+    if (visualRow < 0 || visualRow >= productsTable->rowCount())
+        return -1;
+
+    // Получаем номер ячейки из визуальной строки
+    QTableWidgetItem *cellItem = productsTable->item(visualRow, 0);
+    if (!cellItem) return -1;
+
+    int cellNumber = cellItem->text().toInt();
+
+    // Ищем товар с этим номером ячейки в m_products
+    for (int i = 0; i < m_products.size(); ++i) {
+        if (m_products[i].getCellNumber() == cellNumber) {
+            return i;
+        }
+    }
+
+    return -1;
 }

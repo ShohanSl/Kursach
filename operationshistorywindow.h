@@ -5,7 +5,7 @@
 #include <QTableWidget>
 #include <QPushButton>
 #include <QLabel>
-#include <QList>
+#include "customlist.h"
 #include <QInputDialog>
 #include <QMenu>
 #include <QDate>
@@ -18,7 +18,7 @@ class OperationsHistoryWindow : public QMainWindow
 
 public:
     explicit OperationsHistoryWindow(int sectionNumber, const QString& materialType,
-                                     bool isAdmin, UserManager* userManager = nullptr, QWidget *parent = nullptr);
+                                     bool isAdmin, const QString& mode, UserManager* userManager = nullptr, QWidget *parent = nullptr);
 
 private slots:
     void onBackClicked();
@@ -44,13 +44,15 @@ private:
     QPushButton *backButton;
     QTableWidget *operationsTable;
 
-    QList<Operation> m_operationsHistory;
+    CustomList<Operation> m_operationsHistory;
     QString m_historyFile;
 
     QMenu *contextMenu;
     int selectedRow;
 
     UserManager* m_userManager;
+
+    QString m_mode;  // Добавляем это поле
 };
 
 #endif // OPERATIONSHISTORYWINDOW_H

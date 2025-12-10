@@ -13,7 +13,6 @@ SOURCES += \
     employee.cpp \
     administrator.cpp \
     usermanager.cpp \
-    errorhandler.cpp \
     mainwindow.cpp \
     warehousewindow.cpp \
     sectionwindow.cpp \
@@ -25,7 +24,8 @@ SOURCES += \
     transferformwindow.cpp \
     accountmanagementwindow.cpp \
     accountmanagementwindow.cpp \
-    adduserwindow.cpp
+    adduserwindow.cpp \
+    exceptionhandler.cpp
 
 HEADERS += \
     loginwindow.h \
@@ -34,7 +34,6 @@ HEADERS += \
     employee.h \
     administrator.h \
     usermanager.h \
-    errorhandler.h \
     mainwindow.h \
     warehousewindow.h \
     sectionwindow.h \
@@ -46,7 +45,9 @@ HEADERS += \
     transferformwindow.h \
     accountmanagementwindow.h \
     accountmanagementwindow.h \
-    adduserwindow.h
+    adduserwindow.h \
+    customlist.h \
+    exceptionhandler.h
 
 # Установка кодировки
 QMAKE_CXXFLAGS += -finput-charset=UTF-8
@@ -54,3 +55,6 @@ DEFINES += QT_USE_QSTRINGBUILDER
 
 # Отключаем некоторые предупреждения если нужно
 QMAKE_CXXFLAGS += -Wno-deprecated-declarations
+
+DISTFILES += \
+    CMakeLists.txt

@@ -1,10 +1,11 @@
+// usermanager.h
 #ifndef USERMANAGER_H
 #define USERMANAGER_H
 
 #include "user.h"
 #include "employee.h"
 #include "administrator.h"
-#include <QList>
+#include "customlist.h"
 #include <QString>
 
 class UserManager
@@ -12,12 +13,12 @@ class UserManager
 public:
     UserManager();
 
-    // Аутентификация - возвращает указатель на Employee или Administrator
-    Employee* authenticateUser(const QString& login, const QString& password);
+    // Аутентификация
+    User* authenticateUser(const QString& login, const QString& password);
 
     // Регистрация pending пользователей
     bool registerPendingUser(const QString& lastName, const QString& firstName,
-                             const QString& middleName, bool isAdmin = false);
+                             const QString& middleName, UserRole role);
 
     // Завершение регистрации
     bool completeRegistration(const QString& fullName, const QString& login,
@@ -26,11 +27,12 @@ public:
     // Вспомогательные методы
     void initializeTestData();
     bool isUserInPending(const QString& fullName);
-    User* getPendingUser(const QString& fullName); // Возвращает базового User
+    User* getPendingUser(const QString& fullName);
+    UserRole getPendingUserRole(const QString& fullName);
 
-    QList<QStringList> getEmployeesData() const;
-    QList<QStringList> getAdminsData() const;
-    QList<QStringList> getPendingUsersData() const;
+    CustomList<QStringList> getEmployeesData() const;
+    CustomList<QStringList> getAdminsData() const;
+    CustomList<QStringList> getPendingUsersData() const;
     bool removeEmployeeByLogin(const QString& login);
     bool removeAdminByLogin(const QString& login);
     bool removePendingUserByName(const QString& fullName);
@@ -39,11 +41,12 @@ private:
     void loadUsers();
     void saveUsers();
     User* findPendingUserByName(const QString& fullName);
-    void clearAllUsers();
+    Employee* findEmployeeByLogin(const QString& login);
+    Administrator* findAdminByLogin(const QString& login);
 
-    QList<User*> m_pendingUsers;      // Базовые User (только ФИО)
-    QList<Employee*> m_employees;     // Зарегистрированные сотрудники
-    QList<Administrator*> m_admins;   // Зарегистрированные администраторы
+    CustomList<User*> m_pendingUsers;      // Ожидающие пользователи (базовые User)
+    CustomList<Employee*> m_employees;     // Зарегистрированные сотрудники
+    CustomList<Administrator*> m_admins;   // Зарегистрированные администраторы
 
     QString m_pendingUsersFile = "pending_users.bin";
     QString m_employeesFile = "employees.bin";

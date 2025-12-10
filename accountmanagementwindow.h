@@ -33,7 +33,7 @@ private:
     void loadEmployeesTable();
     void loadAdminsTable();
     void loadPendingUsersTable();
-    void filterTable(QTableWidget *table, const QList<QStringList> &allData, const QString& searchText, int searchCriteria);
+    void filterTable(QTableWidget *table, const CustomList<QStringList> &allData, const QString& searchText, int searchCriteria);
     void setupContextMenu(QTableWidget *table, const QString& userType);
 
     UserManager *m_userManager;
@@ -63,9 +63,9 @@ private:
     QPushButton *backButton;
 
     // Данные таблиц
-    QList<QStringList> m_employeesData;
-    QList<QStringList> m_adminsData;
-    QList<QStringList> m_pendingUsersData;
+    CustomList<QStringList> m_employeesData;
+    CustomList<QStringList> m_adminsData;
+    CustomList<QStringList> m_pendingUsersData;
 
     QMenu *contextMenu;
     QString m_selectedUserType;

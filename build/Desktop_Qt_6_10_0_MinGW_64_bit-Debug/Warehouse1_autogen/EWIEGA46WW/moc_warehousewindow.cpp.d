@@ -394,6 +394,7 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/vadefs.h \
   F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wchar.h \
   F:/Warehouse1/administrator.h \
+  F:/Warehouse1/customlist.h \
   F:/Warehouse1/employee.h \
   F:/Warehouse1/user.h \
   F:/Warehouse1/usermanager.h

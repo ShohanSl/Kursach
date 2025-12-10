@@ -1,3 +1,4 @@
+// usermanager.cpp
 #include "usermanager.h"
 #include <QFile>
 #include <QDataStream>
@@ -16,7 +17,13 @@ UserManager::UserManager()
 
 void UserManager::initializeTestData()
 {
-    clearAllUsers();
+    // Очищаем все списки
+    qDeleteAll(m_pendingUsers);
+    m_pendingUsers.clear();
+    qDeleteAll(m_employees);
+    m_employees.clear();
+    qDeleteAll(m_admins);
+    m_admins.clear();
 
     // Создаем тестового администратора
     Administrator* admin = new Administrator("Иванов", "Админ", "Системович",
@@ -29,11 +36,8 @@ void UserManager::initializeTestData()
     m_employees.append(worker);
 
     // Создаем незарегистрированных пользователей с разными ролями
-    User* pendingAdmin = new User("Сидоров", "Новый", "Администратор");
-    User* pendingWorker = new User("Кузнецов", "Новый", "Сотрудник");
-
-    m_pendingUsers.append(pendingAdmin);
-    m_pendingUsers.append(pendingWorker);
+    registerPendingUser("Сидоров", "Новый", "Администратор", UserRole::Administrator);
+    registerPendingUser("Кузнецов", "Новый", "Сотрудник", UserRole::Employee);
 
     // Сохраняем тестовые данные
     saveUsers();
@@ -41,37 +45,19 @@ void UserManager::initializeTestData()
     qDebug() << "Тестовые данные инициализированы";
 }
 
-void UserManager::clearAllUsers()
-{
-    // Очищаем все списки с освобождением памяти
-    qDeleteAll(m_pendingUsers);
-    m_pendingUsers.clear();
-
-    qDeleteAll(m_employees);
-    m_employees.clear();
-
-    qDeleteAll(m_admins);
-    m_admins.clear();
-
-    // Удаляем файлы если существуют
-    QFile::remove(m_pendingUsersFile);
-    QFile::remove(m_employeesFile);
-    QFile::remove(m_adminsFile);
-}
-
-Employee* UserManager::authenticateUser(const QString& login, const QString& password)
+User* UserManager::authenticateUser(const QString& login, const QString& password)
 {
     // Проверяем администраторов
     for (Administrator* admin : m_admins) {
         if (admin->authenticate(login, password)) {
-            return admin; // Возвращаем как Employee* (upcast)
+            return admin; // Возвращаем как User* (upcast)
         }
     }
 
     // Проверяем сотрудников
     for (Employee* employee : m_employees) {
         if (employee->authenticate(login, password)) {
-            return employee;
+            return employee; // Возвращаем как User* (upcast)
         }
     }
 
@@ -79,7 +65,7 @@ Employee* UserManager::authenticateUser(const QString& login, const QString& pas
 }
 
 bool UserManager::registerPendingUser(const QString& lastName, const QString& firstName,
-                                      const QString& middleName, bool isAdmin)
+                                      const QString& middleName, UserRole role)
 {
     QString fullName = lastName + " " + firstName + " " + middleName;
 
@@ -88,15 +74,11 @@ bool UserManager::registerPendingUser(const QString& lastName, const QString& fi
         return false;
     }
 
-    User* newUser = new User(lastName, firstName, middleName);
+    // Создаем базового User с указанной ролью
+    User* newUser = new User(lastName, firstName, middleName, role);
     m_pendingUsers.append(newUser);
     saveUsers();
     return true;
-}
-
-User* UserManager::getPendingUser(const QString& fullName)
-{
-    return findPendingUserByName(fullName);
 }
 
 bool UserManager::completeRegistration(const QString& fullName, const QString& login,
@@ -104,57 +86,43 @@ bool UserManager::completeRegistration(const QString& fullName, const QString& l
 {
     qDebug() << "Начало регистрации для:" << fullName;
 
+    // Ищем пользователя в ожидающих
     User* pendingUser = findPendingUserByName(fullName);
     if (!pendingUser) {
         qDebug() << "Пользователь не найден в pending:" << fullName;
         return false;
     }
 
-    // Проверяем, не занят ли логин в employees
-    for (Employee* employee : m_employees) {
-        if (employee->getLogin() == login) {
-            qDebug() << "Логин уже занят employee:" << login;
-            return false;
-        }
-    }
+    // Получаем роль из ожидающего пользователя
+    UserRole role = pendingUser->getRole();
 
-    // Проверяем, не занят ли логин в admins
-    for (Administrator* admin : m_admins) {
-        if (admin->getLogin() == login) {
-            qDebug() << "Логин уже занят admin:" << login;
-            return false;
-        }
-    }
-
-    // Создаем нового сотрудника или администратора на основе pending пользователя
-    // В реальной системе здесь должна быть логика определения роли
-    // Пока создаем как сотрудника по умолчанию
-    Employee* newEmployee = new Employee(pendingUser->getLastName(),
-                                         pendingUser->getFirstName(),
-                                         pendingUser->getMiddleName(),
-                                         login, password);
-
-    // Удаляем из ожидания
-    bool removed = false;
-    for (int i = 0; i < m_pendingUsers.size(); ++i) {
-        if (m_pendingUsers[i]->getFullName().trimmed() == fullName.trimmed()) {
-            delete m_pendingUsers[i]; // Освобождаем память
-            m_pendingUsers.removeAt(i);
-            removed = true;
-            qDebug() << "Пользователь удален из pending:" << fullName;
-            break;
-        }
-    }
-
-    if (!removed) {
-        delete newEmployee; // Очищаем память в случае ошибки
-        qDebug() << "Не удалось удалить пользователя из pending:" << fullName;
+    // Проверяем, не занят ли логин
+    if (findEmployeeByLogin(login) || findAdminByLogin(login)) {
+        qDebug() << "Логин уже занят:" << login;
         return false;
     }
 
-    // Добавляем в список сотрудников
-    m_employees.append(newEmployee);
-    qDebug() << "Пользователь добавлен в employees:" << fullName;
+    // Создаем пользователя в зависимости от роли
+    if (role == UserRole::Administrator) {
+        Administrator* newAdmin = new Administrator(pendingUser->getLastName(),
+                                                    pendingUser->getFirstName(),
+                                                    pendingUser->getMiddleName(),
+                                                    login, password);
+        m_admins.append(newAdmin);
+        qDebug() << "Создан администратор:" << fullName;
+    } else {
+        Employee* newEmployee = new Employee(pendingUser->getLastName(),
+                                             pendingUser->getFirstName(),
+                                             pendingUser->getMiddleName(),
+                                             login, password);
+        m_employees.append(newEmployee);
+        qDebug() << "Создан сотрудник:" << fullName;
+    }
+
+    // Удаляем из ожидания
+    m_pendingUsers.removeOne(pendingUser);
+    delete pendingUser;
+    qDebug() << "Пользователь удален из pending:" << fullName;
 
     saveUsers();
     qDebug() << "Регистрация успешна для:" << fullName;
@@ -249,9 +217,28 @@ void UserManager::saveUsers()
 User* UserManager::findPendingUserByName(const QString& fullName)
 {
     for (User* user : m_pendingUsers) {
-        // Точное сравнение полного имени
-        if (user->getFullName().trimmed() == fullName.trimmed()) {
+        if (user->getFullName() == fullName) {
             return user;
+        }
+    }
+    return nullptr;
+}
+
+Employee* UserManager::findEmployeeByLogin(const QString& login)
+{
+    for (Employee* employee : m_employees) {
+        if (employee->getLogin() == login) {
+            return employee;
+        }
+    }
+    return nullptr;
+}
+
+Administrator* UserManager::findAdminByLogin(const QString& login)
+{
+    for (Administrator* admin : m_admins) {
+        if (admin->getLogin() == login) {
+            return admin;
         }
     }
     return nullptr;
@@ -262,9 +249,22 @@ bool UserManager::isUserInPending(const QString& fullName)
     return findPendingUserByName(fullName) != nullptr;
 }
 
-// usermanager.cpp
-QList<QStringList> UserManager::getEmployeesData() const {
-    QList<QStringList> data;
+User* UserManager::getPendingUser(const QString& fullName)
+{
+    return findPendingUserByName(fullName);
+}
+
+UserRole UserManager::getPendingUserRole(const QString& fullName)
+{
+    User* user = findPendingUserByName(fullName);
+    if (user) {
+        return user->getRole();
+    }
+    return UserRole::Employee; // По умолчанию
+}
+
+CustomList<QStringList> UserManager::getEmployeesData() const {
+    CustomList<QStringList> data;
     for (const Employee* employee : m_employees) {
         data.append({employee->getLastName(),
                      employee->getFirstName(),
@@ -274,8 +274,8 @@ QList<QStringList> UserManager::getEmployeesData() const {
     return data;
 }
 
-QList<QStringList> UserManager::getAdminsData() const {
-    QList<QStringList> data;
+CustomList<QStringList> UserManager::getAdminsData() const {
+    CustomList<QStringList> data;
     for (const Administrator* admin : m_admins) {
         data.append({admin->getLastName(),
                      admin->getFirstName(),
@@ -285,12 +285,13 @@ QList<QStringList> UserManager::getAdminsData() const {
     return data;
 }
 
-QList<QStringList> UserManager::getPendingUsersData() const {
-    QList<QStringList> data;
+CustomList<QStringList> UserManager::getPendingUsersData() const {
+    CustomList<QStringList> data;
     for (const User* user : m_pendingUsers) {
         data.append({user->getLastName(),
                      user->getFirstName(),
-                     user->getMiddleName()});
+                     user->getMiddleName(),
+                     user->getRoleString()}); // Показываем роль в таблице
     }
     return data;
 }

@@ -3,12 +3,16 @@
 Administrator::Administrator()
     : Employee()
 {
+    // Явно устанавливаем роль администратора
+    m_role = UserRole::Administrator;
 }
 
 Administrator::Administrator(const QString& lastName, const QString& firstName, const QString& middleName,
                              const QString& login, const QString& password)
     : Employee(lastName, firstName, middleName, login, password)
 {
+    // Явно устанавливаем роль администратора
+    m_role = UserRole::Administrator;
 }
 
 QString Administrator::getRoleString() const {

@@ -22,7 +22,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Warehouse1
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        errorhandler.cpp errorhandler.h loginwindow.cpp loginwindow.h main.cpp mainwindow.cpp mainwindow.h operation.cpp operation.h product.cpp product.h registrationwindow.cpp registrationwindow.h sectionwindow.cpp sectionwindow.h user.cpp user.h usermanager.cpp usermanager.h WarehouseSystem.pro warehousewindow.cpp warehousewindow.h
+        loginwindow.cpp loginwindow.h main.cpp mainwindow.cpp mainwindow.h operation.cpp operation.h product.cpp product.h registrationwindow.cpp registrationwindow.h sectionwindow.cpp sectionwindow.h user.cpp user.h usermanager.cpp usermanager.h WarehouseSystem.pro warehousewindow.cpp warehousewindow.h
         employee.h employee.cpp
         administrator.h administrator.cpp
         operationshistorywindow.h operationshistorywindow.cpp
@@ -31,6 +31,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         transferformwindow.h transferformwindow.cpp
         accountmanagementwindow.h accountmanagementwindow.cpp
         adduserwindow.h adduserwindow.cpp
+        customlist.h
+        exceptionhandler.h exceptionhandler.cpp
 
 
     )

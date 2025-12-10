@@ -3,12 +3,15 @@
 Employee::Employee()
     : User(), m_login(""), m_password("")
 {
+    // Явно устанавливаем роль сотрудника
+    m_role = UserRole::Employee;
 }
 
 Employee::Employee(const QString& lastName, const QString& firstName, const QString& middleName,
                    const QString& login, const QString& password)
-    : User(lastName, firstName, middleName), m_login(login), m_password(password)
+    : User(lastName, firstName, middleName, UserRole::Employee), m_login(login), m_password(password)
 {
+    // Роль уже установлена в конструкторе User
 }
 
 // Getters

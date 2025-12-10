@@ -5,7 +5,7 @@
 #include <QTableWidget>
 #include <QPushButton>
 #include <QLabel>
-#include <QList>
+#include "customlist.h"
 #include <QLineEdit>
 #include <QComboBox>
 #include <QInputDialog>
@@ -62,9 +62,9 @@ private:
     QLineEdit *searchEdit;
     QComboBox *searchComboBox;
 
-    QList<Product> m_products;
-    QList<Product> m_allProducts;
-    QList<Operation> m_operationsHistory;
+    CustomList<Product> m_products;
+    CustomList<Product> m_allProducts;
+    CustomList<Operation> m_operationsHistory;
 
     QString m_productsFile;
     QString m_historyFile;
@@ -72,6 +72,8 @@ private:
     QMenu *contextMenu;
     int selectedRow;
     UserManager* m_userManager;
+
+    int getDataIndexFromVisualRow(int visualRow) const;
 
     static const int MAX_CELLS = 60;
 };

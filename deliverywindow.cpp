@@ -11,22 +11,36 @@
 #include "operation.h"
 #include "product.h"
 #include <QDebug>
+#include "exceptionhandler.h"
 
 DeliveryWindow::DeliveryWindow(bool isAdmin, UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_isAdmin(isAdmin), m_userManager(userManager)
 {
+    TRY_CATCH_BEGIN
     setupUI();
     applyStyle();
     setWindowTitle("Оформление поставки");
     setFixedSize(800, 600);
+    TRY_CATCH_END
 }
 
 void DeliveryWindow::setupUI()
 {
-    centralWidget = new QWidget(this);
+    TRY_CATCH_BEGIN
+        centralWidget = new QWidget(this);
+    if (!centralWidget) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания центрального виджета",
+                        "Не удалось создать центральный виджет окна поставки");
+    }
     setCentralWidget(centralWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    if (!mainLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания главного макета",
+                        "Не удалось создать главный макет окна поставки");
+    }
     mainLayout->setSpacing(15);
     mainLayout->setContentsMargins(20, 15, 20, 15);
 
@@ -111,6 +125,7 @@ void DeliveryWindow::setupUI()
 
     // Добавляем первый набор полей товара
     addProductFields();
+    TRY_CATCH_END
 }
 
 void DeliveryWindow::applyStyle()
@@ -332,12 +347,13 @@ void DeliveryWindow::onProductTypeChanged(int index)
     QLineEdit *cellEdit = nullptr;
 
     // Ищем второй комбобокс (секцию) и поле ячейки
-    QList<QComboBox*> combos = productWidget->findChildren<QComboBox*>();
+    CustomList<QComboBox*> combos;
+    combos.fromQList(productWidget->findChildren<QComboBox*>());
     if (combos.size() > 1) {
         sectionCombo = combos[1];
     }
 
-    QList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
+    CustomList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
     if (edits.size() > 4) { // Пятое поле - ячейка
         cellEdit = edits[4];
     }
@@ -379,7 +395,7 @@ void DeliveryWindow::updateSectionComboBox(QComboBox* sectionCombo, const QStrin
         // Находим и активируем поле ячейки
         QWidget *productWidget = sectionCombo->parentWidget();
         if (productWidget) {
-            QList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
+            CustomList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
             if (edits.size() > 4) { // Пятое поле - ячейка
                 QLineEdit *cellEdit = edits[4];
                 cellEdit->setEnabled(true);
@@ -392,7 +408,7 @@ void DeliveryWindow::updateSectionComboBox(QComboBox* sectionCombo, const QStrin
         QWidget *productWidget = sectionCombo->parentWidget();
         if (!productWidget) return;
 
-        QList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
+        CustomList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
         if (edits.size() > 4) { // Пятое поле - ячейка
             QLineEdit *cellEdit = edits[4];
             cellEdit->setEnabled(sectionCombo->currentIndex() >= 0);
@@ -412,58 +428,87 @@ void DeliveryWindow::onRemoveProductClicked()
 
 void DeliveryWindow::onCompleteDeliveryClicked()
 {
-    // Валидация основных полей
-    if (supplierEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Поставщик'");
-        return;
+    TRY_CATCH_BEGIN
+        // Валидация основных полей
+        if (supplierEdit->text().trimmed().isEmpty()) {
+        THROW_VALIDATION_ERROR("Поставщик", "не может быть пустым",
+                               "Заполните поле 'Поставщик'");
     }
 
     // Валидация товаров
+    if (productWidgets.isEmpty()) {
+        THROW_VALIDATION_ERROR("товары", "отсутствуют",
+                               "Добавьте хотя бы один товар");
+    }
+
     for (QWidget *productWidget : productWidgets) {
-        QList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
-        QList<QComboBox*> combos = productWidget->findChildren<QComboBox*>();
+        CustomList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
+        CustomList<QComboBox*> combos;
+        combos.fromQList(productWidget->findChildren<QComboBox*>());
 
         // Проверяем наличие всех необходимых элементов
         if (edits.size() < 4 || combos.size() < 2) {
-            QMessageBox::warning(this, "Ошибка", "Некорректные данные товара");
-            return;
+            THROW_VALIDATION_ERROR("данные товара", "неполные",
+                                   "Некорректные данные товара");
         }
 
         // Безопасная проверка полей
         bool hasEmptyFields = false;
+        QStringList emptyFields;
 
         // Проверяем текстовые поля
         for (int i = 0; i < 3; ++i) { // Первые 3 поля: название, индекс, количество
             if (i < edits.size() && edits[i]->text().trimmed().isEmpty()) {
                 hasEmptyFields = true;
-                break;
+                if (i == 0) emptyFields << "Название товара";
+                else if (i == 1) emptyFields << "Индекс товара";
+                else if (i == 2) emptyFields << "Количество";
             }
         }
 
         // Проверяем комбобоксы
-        if (combos[0]->currentIndex() == -1 || combos[1]->currentIndex() == -1) {
+        if (combos[0]->currentIndex() == -1) {
             hasEmptyFields = true;
+            emptyFields << "Тип товара";
+        }
+        if (combos[1]->currentIndex() == -1) {
+            hasEmptyFields = true;
+            emptyFields << "Секция размещения";
         }
 
         // Проверяем поле ячейки (4-е поле)
         if (edits.size() > 3 && edits[3]->text().trimmed().isEmpty()) {
             hasEmptyFields = true;
+            emptyFields << "Ячейка размещения";
         }
 
         if (hasEmptyFields) {
-            QMessageBox::warning(this, "Ошибка", "Заполните все обязательные поля для всех товаров");
-            return;
+            THROW_VALIDATION_ERROR("поля товара", "не все заполнены",
+                                   QString("Заполните все обязательные поля для товара.\n"
+                                           "Не заполнены: %1").arg(emptyFields.join(", ")));
         }
-    }
 
-    if (productWidgets.isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Добавьте хотя бы один товар");
-        return;
+        // Проверка числовых полей
+        bool ok;
+        int quantity = edits[2]->text().toInt(&ok);
+        if (!ok || quantity <= 0) {
+            THROW_VALIDATION_ERROR("количество", "должно быть положительным числом",
+                                   "Количество товара должно быть положительным числом");
+        }
+
+        if (edits.size() > 3) {
+            int cellNumber = edits[3]->text().toInt(&ok);
+            if (!ok || cellNumber < 1 || cellNumber > 60) {
+                THROW_VALIDATION_ERROR("номер ячейки", "должен быть от 1 до 60",
+                                       "Номер ячейки должен быть числом от 1 до 60");
+            }
+        }
     }
 
     // Сохраняем данные (внутри saveDeliveryToFiles будет проверка ячеек)
     saveDeliveryToFiles();
     // Не вызываем onBackClicked() здесь - он вызывается внутри saveDeliveryToFiles() при успехе
+    TRY_CATCH_END
 }
 
 bool DeliveryWindow::validateAndPrepareDelivery()
@@ -471,8 +516,8 @@ bool DeliveryWindow::validateAndPrepareDelivery()
     QString supplier = supplierEdit->text().trimmed();
 
     // Собираем информацию о всех товарах для проверки
-    QList<QPair<int, int>> occupiedCells; // секция, ячейка
-    QList<QPair<int, int>> conflictingCells; // секция, ячейка
+    CustomList<QPair<int, int>> occupiedCells; // секция, ячейка
+    CustomList<QPair<int, int>> conflictingCells; // секция, ячейка
 
     for (QWidget *productWidget : productWidgets) {
         // Безопасное получение полей
@@ -483,8 +528,9 @@ bool DeliveryWindow::validateAndPrepareDelivery()
         QComboBox *sectionCombo = nullptr;
         QLineEdit *cellEdit = nullptr;
 
-        QList<QComboBox*> combos = productWidget->findChildren<QComboBox*>();
-        QList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
+        CustomList<QComboBox*> combos;
+        combos.fromQList(productWidget->findChildren<QComboBox*>());
+        CustomList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
 
         if (combos.size() >= 2) {
             typeCombo = combos[0];
@@ -561,7 +607,8 @@ bool DeliveryWindow::validateAndPrepareDelivery()
 
 void DeliveryWindow::saveDeliveryToFiles()
 {
-    QString supplier = supplierEdit->text().trimmed();
+    TRY_CATCH_BEGIN
+        QString supplier = supplierEdit->text().trimmed();
     QDateTime deliveryDate = dateEdit->dateTime();
     if (!dateEdit->date().isValid()) {
         deliveryDate = QDateTime::currentDateTime();
@@ -582,8 +629,9 @@ void DeliveryWindow::saveDeliveryToFiles()
         QComboBox *sectionCombo = nullptr;
         QLineEdit *cellEdit = nullptr;
 
-        QList<QComboBox*> combos = productWidget->findChildren<QComboBox*>();
-        QList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
+        CustomList<QComboBox*> combos;
+        combos.fromQList(productWidget->findChildren<QComboBox*>());
+        CustomList<QLineEdit*> edits = productWidget->findChildren<QLineEdit*>();
 
         if (combos.size() >= 2) {
             typeCombo = combos[0];
@@ -622,15 +670,23 @@ void DeliveryWindow::saveDeliveryToFiles()
         // Создаем операцию поставки
         Operation operation(productName, productIndex, quantity,
                             supplier, QString("Ячейка №%1").arg(cellNumber),
-                            Operation::DELIVERY, deliveryDate.date()); // Берем только дату
+                            Operation::DELIVERY, deliveryDate.date());
 
         // Сохраняем операцию в историю
         QString historyFile = QString("operations_history/section_history_%1.bin").arg(sectionNumber);
-        QDir().mkpath("operations_history");
+        QDir historyDir("operations_history");
+        if (!historyDir.exists() && !historyDir.mkpath(".")) {
+            THROW_FILE_ERROR("operations_history", "создания директории",
+                             "Не удалось создать директорию для истории операций");
+        }
 
-        QList<Operation> operations;
+        CustomList<Operation> operations;
         QFile hFile(historyFile);
-        if (hFile.open(QIODevice::ReadOnly)) {
+        if (hFile.exists()) {
+            if (!hFile.open(QIODevice::ReadOnly)) {
+                THROW_FILE_ERROR(historyFile, "открытия для чтения",
+                                 "Не удалось прочитать историю операций");
+            }
             QDataStream in(&hFile);
             quint32 size;
             in >> size;
@@ -644,22 +700,32 @@ void DeliveryWindow::saveDeliveryToFiles()
 
         operations.append(operation);
 
-        if (hFile.open(QIODevice::WriteOnly)) {
-            QDataStream out(&hFile);
-            out << static_cast<quint32>(operations.size());
-            for (const Operation& op : operations) {
-                out << op;
-            }
-            hFile.close();
+        if (!hFile.open(QIODevice::WriteOnly)) {
+            THROW_FILE_ERROR(historyFile, "открытия для записи",
+                             "Не удалось сохранить историю операций");
         }
+        QDataStream outHistory(&hFile);  // ИЗМЕНЕНО: out -> outHistory
+        outHistory << static_cast<quint32>(operations.size());
+        for (const Operation& op : operations) {
+            outHistory << op;
+        }
+        hFile.close();
 
         // Создаем/обновляем товар в секции
         QString productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
-        QDir().mkpath("sections");
+        QDir sectionsDir("sections");
+        if (!sectionsDir.exists() && !sectionsDir.mkpath(".")) {
+            THROW_FILE_ERROR("sections", "создания директории",
+                             "Не удалось создать директорию для секций");
+        }
 
-        QList<Product> products;
+        CustomList<Product> products;
         QFile pFile(productsFile);
-        if (pFile.open(QIODevice::ReadOnly)) {
+        if (pFile.exists()) {
+            if (!pFile.open(QIODevice::ReadOnly)) {
+                THROW_FILE_ERROR(productsFile, "открытия для чтения",
+                                 "Не удалось прочитать список товаров");
+            }
             QDataStream in(&pFile);
             quint32 size;
             in >> size;
@@ -687,25 +753,38 @@ void DeliveryWindow::saveDeliveryToFiles()
             products.append(Product(productName, productIndex, quantity, supplier, cellNumber));
         }
 
-        if (pFile.open(QIODevice::WriteOnly)) {
-            QDataStream out(&pFile);
-            out << static_cast<quint32>(products.size());
-            for (const Product& prod : products) {
-                out << prod;
-            }
-            pFile.close();
+        if (!pFile.open(QIODevice::WriteOnly)) {
+            THROW_FILE_ERROR(productsFile, "открытия для записи",
+                             "Не удалось сохранить список товаров");
         }
+        QDataStream outProducts(&pFile);  // ИЗМЕНЕНО: out -> outProducts
+        outProducts << static_cast<quint32>(products.size());
+        for (const Product& prod : products) {
+            outProducts << prod;
+        }
+        pFile.close();
 
         qDebug() << "Сохранен товар:" << productName << "в секцию" << sectionNumber << "ячейка" << cellNumber;
     }
 
-    QMessageBox::information(this, "Успех", "Поставка успешно оформлена!");
+    // Используем ExceptionHandler для показа информационного сообщения
+    ExceptionHandler::showMessageBox(ErrorSeverity::INFO, "Успех",
+                                     "Поставка успешно оформлена!", this);
+
     onBackClicked();
+    TRY_CATCH_END
 }
 
 void DeliveryWindow::onBackClicked()
 {
-    MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
+    TRY_CATCH_BEGIN
+        MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
+    if (!mainWindow) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания главного окна",
+                        "Не удалось создать экземпляр MainWindow");
+    }
     mainWindow->show();
     this->close();
+    TRY_CATCH_END
 }

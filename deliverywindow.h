@@ -45,7 +45,7 @@ private:
     QDateEdit *dateEdit;
 
     QVBoxLayout *productsLayout;
-    QList<QWidget*> productWidgets;
+    CustomList<QWidget*> productWidgets;
 
     QPushButton *completeButton;
     QPushButton *backButton;

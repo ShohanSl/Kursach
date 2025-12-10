@@ -9,7 +9,7 @@
 #include <QLabel>
 #include "usermanager.h"
 #include "registrationwindow.h"
-#include "employee.h"  // Добавляем новый заголовок
+#include "user.h"
 
 class LoginWindow : public QMainWindow
 {

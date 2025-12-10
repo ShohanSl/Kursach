@@ -10,13 +10,15 @@
 #include <QDateEdit>
 #include "sectionwindow.h"
 #include <QDebug>
+#include "exceptionhandler.h" // Добавляем заголовок
 
 OperationsHistoryWindow::OperationsHistoryWindow(int sectionNumber, const QString& materialType,
-                                                 bool isAdmin, UserManager* userManager, QWidget *parent)
+                                                 bool isAdmin, const QString& mode, UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_sectionNumber(sectionNumber), m_materialType(materialType),
-    m_isAdmin(isAdmin), m_userManager(userManager)
+    m_isAdmin(isAdmin), m_mode(mode), m_userManager(userManager)
 {
-    m_historyFile = QString("operations_history/section_history_%1.bin").arg(sectionNumber);
+    TRY_CATCH_BEGIN
+        m_historyFile = QString("operations_history/section_history_%1.bin").arg(sectionNumber);
 
     setupUI();
     applyStyle();
@@ -29,26 +31,58 @@ OperationsHistoryWindow::OperationsHistoryWindow(int sectionNumber, const QStrin
     if (m_isAdmin) {
         setupContextMenu();
     }
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::setupUI()
 {
-    centralWidget = new QWidget(this);
+    TRY_CATCH_BEGIN
+        centralWidget = new QWidget(this);
+    if (!centralWidget) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания центрального виджета",
+                        "Не удалось создать центральный виджет окна истории операций");
+    }
     setCentralWidget(centralWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    if (!mainLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания главного макета",
+                        "Не удалось создать главный макет окна истории операций");
+    }
     mainLayout->setSpacing(15);
     mainLayout->setContentsMargins(30, 20, 30, 20);
 
     // ===== ВЕРХНЯЯ ПАНЕЛЬ =====
     QWidget *topPanel = new QWidget();
+    if (!topPanel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания верхней панели",
+                        "Не удалось создать виджет верхней панели");
+    }
     QHBoxLayout *topLayout = new QHBoxLayout(topPanel);
+    if (!topLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания макета верхней панели",
+                        "Не удалось создать макет для верхней панели");
+    }
     topLayout->setContentsMargins(0, 0, 0, 0);
 
     backButton = new QPushButton("← Назад");
+    if (!backButton) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания кнопки 'Назад'",
+                        "Не удалось создать кнопку возврата");
+    }
     backButton->setFixedSize(100, 35);
 
     titleLabel = new QLabel(QString("ИСТОРИЯ ОПЕРАЦИЙ - СЕКЦИЯ №%1").arg(m_sectionNumber));
+    if (!titleLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания заголовка",
+                        "Не удалось создать метку заголовка");
+    }
     titleLabel->setAlignment(Qt::AlignCenter);
 
     topLayout->addWidget(backButton);
@@ -58,16 +92,21 @@ void OperationsHistoryWindow::setupUI()
 
     // ===== ТАБЛИЦА ОПЕРАЦИЙ =====
     operationsTable = new QTableWidget();
+    if (!operationsTable) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания таблицы операций",
+                        "Не удалось создать таблицу для отображения истории операций");
+    }
     operationsTable->setColumnCount(4);
     operationsTable->setHorizontalHeaderLabels({"Дата", "Тип операции", "Откуда", "Куда"});
 
-    // Настройка таблицы
+    // Настройка таблицы (УБИРАЕМ сортировку)
     operationsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     operationsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     operationsTable->setAlternatingRowColors(true);
     operationsTable->horizontalHeader()->setStretchLastSection(true);
     operationsTable->verticalHeader()->setVisible(false);
-    operationsTable->setSortingEnabled(true);
+    // УБИРАЕМ: operationsTable->setSortingEnabled(true);
     operationsTable->setSelectionMode(QAbstractItemView::SingleSelection);
 
     // Настраиваем ширину колонок
@@ -90,11 +129,13 @@ void OperationsHistoryWindow::setupUI()
     if (m_isAdmin) {
         connect(operationsTable, &QTableWidget::cellDoubleClicked, this, &OperationsHistoryWindow::onCellDoubleClicked);
     }
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::applyStyle()
 {
-    setStyleSheet(R"(
+    TRY_CATCH_BEGIN
+        setStyleSheet(R"(
         QMainWindow {
             background-color: #f0f0f0;
         }
@@ -171,15 +212,25 @@ void OperationsHistoryWindow::applyStyle()
     )");
 
     backButton->setObjectName("backButton");
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::loadOperationsHistory()
 {
-    QDir().mkpath("operations_history");
+    TRY_CATCH_BEGIN
+        QDir historyDir("operations_history");
+    if (!historyDir.exists() && !historyDir.mkpath(".")) {
+        THROW_FILE_ERROR("operations_history", "создания директории",
+                         "Не удалось создать директорию для истории операций");
+    }
 
     m_operationsHistory.clear();
     QFile file(m_historyFile);
-    if (file.open(QIODevice::ReadOnly)) {
+    if (file.exists()) {
+        if (!file.open(QIODevice::ReadOnly)) {
+            THROW_FILE_ERROR(m_historyFile, "открытия для чтения",
+                             "Не удалось прочитать историю операций");
+        }
         QDataStream in(&file);
         quint32 size;
         in >> size;
@@ -192,23 +243,35 @@ void OperationsHistoryWindow::loadOperationsHistory()
     }
 
     qDebug() << "Loaded" << m_operationsHistory.size() << "operations";
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::saveOperationsHistory()
 {
-    QFile file(m_historyFile);
-    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);
-        out << static_cast<quint32>(m_operationsHistory.size());
-        for (const Operation& operation : m_operationsHistory) {
-            out << operation;
-        }
-        file.close();
+    TRY_CATCH_BEGIN
+        QFile file(m_historyFile);
+    if (!file.open(QIODevice::WriteOnly)) {
+        THROW_FILE_ERROR(m_historyFile, "открытия для записи",
+                         "Не удалось сохранить историю операций");
     }
+    QDataStream out(&file);
+    out << static_cast<quint32>(m_operationsHistory.size());
+    for (const Operation& operation : m_operationsHistory) {
+        out << operation;
+    }
+    file.close();
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::updateTable()
 {
+    TRY_CATCH_BEGIN
+        // Сортируем операции по дате (новые сверху)
+        std::sort(m_operationsHistory.begin(), m_operationsHistory.end(),
+                  [](const Operation& a, const Operation& b) {
+                      return a.getDate() > b.getDate(); // По убыванию - новые сначала
+                  });
+
     operationsTable->setRowCount(m_operationsHistory.size());
 
     for (int i = 0; i < m_operationsHistory.size(); ++i) {
@@ -220,34 +283,73 @@ void OperationsHistoryWindow::updateTable()
         QString toLocation = operation.getToLocation();
 
         QTableWidgetItem *dateItem = new QTableWidgetItem(dateString);
+        if (!dateItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            "Не удалось создать элемент для даты операции");
+        }
+
         QTableWidgetItem *typeItem = new QTableWidgetItem(operationType);
+        if (!typeItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            "Не удалось создать элемент для типа операции");
+        }
+
         QTableWidgetItem *fromItem = new QTableWidgetItem(fromLocation);
+        if (!fromItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            "Не удалось создать элемент для места отправления");
+        }
+
         QTableWidgetItem *toItem = new QTableWidgetItem(toLocation);
+        if (!toItem) {
+            THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                            "Ошибка создания элемента таблицы",
+                            "Не удалось создать элемент для места назначения");
+        }
 
         operationsTable->setItem(i, 0, dateItem);
         operationsTable->setItem(i, 1, typeItem);
         operationsTable->setItem(i, 2, fromItem);
         operationsTable->setItem(i, 3, toItem);
-
-        dateItem->setData(Qt::UserRole, operation.getDate());
     }
 
-    operationsTable->sortByColumn(0, Qt::DescendingOrder);
+    // УБИРАЕМ: operationsTable->setSortingEnabled(false);
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::onBackClicked()
 {
-    SectionWindow *sectionWindow = new SectionWindow(m_sectionNumber, m_materialType, m_isAdmin, "view", m_userManager);
+    TRY_CATCH_BEGIN
+        SectionWindow *sectionWindow = new SectionWindow(m_sectionNumber, m_materialType, m_isAdmin, m_mode, m_userManager);
+    if (!sectionWindow) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания окна секции",
+                        "Не удалось создать экземпляр SectionWindow");
+    }
     sectionWindow->show();
     this->close();
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::onCellDoubleClicked(int row, int column)
 {
-    if (!m_isAdmin) return;
+    TRY_CATCH_BEGIN
+        if (!m_isAdmin) return;
+
+    if (row < 0 || row >= m_operationsHistory.size()) {
+        THROW_VALIDATION_ERROR("номер строки", "выходит за пределы списка операций",
+                               QString("Выбранная строка %1, всего строк %2").arg(row).arg(m_operationsHistory.size()));
+    }
 
     QTableWidgetItem* item = operationsTable->item(row, column);
-    if (!item) return;
+    if (!item) {
+        THROW_EXCEPTION(ErrorSeverity::WARNING, ErrorSource::VALIDATION,
+                        "Ошибка редактирования", "Не удалось получить элемент таблицы для редактирования");
+        return;
+    }
 
     QString currentValue = item->text();
     bool ok;
@@ -263,8 +365,7 @@ void OperationsHistoryWindow::onCellDoubleClicked(int row, int column)
     }
 
     if (column == 0) {
-        QDate currentDate = QDate::fromString(currentValue, "dd.MM.yyyy");
-        if (!currentDate.isValid()) currentDate = QDate::currentDate();
+        QDate currentDate = m_operationsHistory[row].getDate();
 
         QDialog dialog(this);
         dialog.setWindowTitle("Редактирование даты");
@@ -292,8 +393,11 @@ void OperationsHistoryWindow::onCellDoubleClicked(int row, int column)
         }
     } else if (column == 1) {
         QStringList types = {"Поставка", "Отгрузка", "Перемещение"};
+        int currentIndex = types.indexOf(currentValue);
+        if (currentIndex == -1) currentIndex = 0;
+
         QString selected = QInputDialog::getItem(this, "Редактирование", "Выберите тип операции:",
-                                                 types, types.indexOf(currentValue), false, &ok);
+                                                 types, currentIndex, false, &ok);
         if (ok) newValue = selected;
     } else {
         newValue = QInputDialog::getText(this, "Редактирование",
@@ -304,14 +408,17 @@ void OperationsHistoryWindow::onCellDoubleClicked(int row, int column)
     if (ok && !newValue.isEmpty()) {
         if (validateCellEdit(row, column, newValue)) {
             updateOperationData(row, column, newValue);
-            saveOperationsHistory();
-            QMessageBox::information(this, "Успех", "Данные успешно обновлены!");
+            // Используем ExceptionHandler для информационного сообщения
+            ExceptionHandler::showMessageBox(ErrorSeverity::INFO, "Успех",
+                                             "Данные успешно обновлены!", this);
         }
     }
+    TRY_CATCH_END
 }
 
 bool OperationsHistoryWindow::validateCellEdit(int row, int column, const QString& newValue)
 {
+    // Этот метод оставляем с QMessageBox, так как это пользовательские ошибки валидации
     if (row < 0 || row >= m_operationsHistory.size()) return false;
 
     switch(column) {
@@ -344,7 +451,8 @@ bool OperationsHistoryWindow::validateCellEdit(int row, int column, const QStrin
 
 void OperationsHistoryWindow::updateOperationData(int row, int column, const QString& newValue)
 {
-    Operation& operation = m_operationsHistory[row];
+    TRY_CATCH_BEGIN
+        Operation& operation = m_operationsHistory[row];
 
     switch(column) {
     case 0: {
@@ -371,13 +479,26 @@ void OperationsHistoryWindow::updateOperationData(int row, int column, const QSt
     }
 
     saveOperationsHistory();
+    // Обновляем таблицу
     updateTable();
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::setupContextMenu()
 {
-    contextMenu = new QMenu(this);
+    TRY_CATCH_BEGIN
+        contextMenu = new QMenu(this);
+    if (!contextMenu) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания контекстного меню",
+                        "Не удалось создать контекстное меню для таблицы операций");
+    }
     QAction *deleteAction = new QAction("Удалить", this);
+    if (!deleteAction) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания действия меню",
+                        "Не удалось создать действие удаления для контекстного меню");
+    }
     connect(deleteAction, &QAction::triggered, this, &OperationsHistoryWindow::onDeleteOperation);
     contextMenu->addAction(deleteAction);
 
@@ -386,15 +507,26 @@ void OperationsHistoryWindow::setupContextMenu()
         if (!m_isAdmin) return;
         QTableWidgetItem *item = operationsTable->itemAt(pos);
         if (item) {
-            selectedRow = item->row();
+            selectedRow = item->row(); // Сохраняем визуальную строку
             contextMenu->exec(operationsTable->viewport()->mapToGlobal(pos));
         }
     });
+    TRY_CATCH_END
 }
 
 void OperationsHistoryWindow::onDeleteOperation()
 {
-    if (selectedRow < 0 || selectedRow >= m_operationsHistory.size()) return;
+    TRY_CATCH_BEGIN
+        if (selectedRow < 0 || selectedRow >= operationsTable->rowCount()) {
+        THROW_VALIDATION_ERROR("номер строки", "не выбран или выходит за пределы",
+                               "Не выбрана строка для удаления или некорректный номер строки");
+    }
+
+    // Поскольку операции уже отсортированы вручную, визуальная строка соответствует индексу в m_operationsHistory
+    if (selectedRow >= m_operationsHistory.size()) {
+        THROW_VALIDATION_ERROR("индекс операции", "выходит за пределы списка операций",
+                               QString("Выбранная строка %1, всего операций %2").arg(selectedRow).arg(m_operationsHistory.size()));
+    }
 
     const Operation& operation = m_operationsHistory.at(selectedRow);
     QString operationInfo = QString("Дата: %1\nТип: %2\nОткуда: %3\nКуда: %4")
@@ -403,6 +535,7 @@ void OperationsHistoryWindow::onDeleteOperation()
                                 .arg(operation.getFromLocation())
                                 .arg(operation.getToLocation());
 
+    // Оставляем QMessageBox для пользовательского подтверждения
     QMessageBox::StandardButton reply = QMessageBox::question(
         this, "Подтверждение удаления",
         QString("Вы уверены, что хотите удалить эту операцию?\n\n%1").arg(operationInfo),
@@ -412,8 +545,11 @@ void OperationsHistoryWindow::onDeleteOperation()
         m_operationsHistory.removeAt(selectedRow);
         saveOperationsHistory();
         updateTable();
-        QMessageBox::information(this, "Успех", "Операция успешно удалена!");
+        // Используем ExceptionHandler для информационного сообщения
+        ExceptionHandler::showMessageBox(ErrorSeverity::INFO, "Успех",
+                                         "Операция успешно удалена!", this);
     }
 
     selectedRow = -1;
+    TRY_CATCH_END
 }

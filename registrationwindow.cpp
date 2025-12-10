@@ -2,29 +2,54 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QFrame>
+#include "exceptionhandler.h" // Добавляем заголовок
+#include <QRegularExpression>
 
 RegistrationWindow::RegistrationWindow(UserManager *userManager, QWidget *parent)
     : QDialog(parent), m_userManager(userManager)
 {
+    TRY_CATCH_BEGIN
     setupUI();
     applyStyle();
     setWindowTitle("Регистрация нового пользователя");
     setFixedSize(500, 550);
+    TRY_CATCH_END
 }
 
 void RegistrationWindow::setupUI()
 {
-    // Главный вертикальный layout
-    QVBoxLayout *mainVerticalLayout = new QVBoxLayout(this);
+    TRY_CATCH_BEGIN
+        // Главный вертикальный layout
+        QVBoxLayout *mainVerticalLayout = new QVBoxLayout(this);
+    if (!mainVerticalLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания главного макета",
+                        "Не удалось создать главный вертикальный макет");
+    }
     mainVerticalLayout->setSpacing(3);
     mainVerticalLayout->setContentsMargins(15, 10, 15, 15);
 
     // ===== ВЕРХНЯЯ ПАНЕЛЬ С КНОПКОЙ НАЗАД =====
     QWidget *topPanel = new QWidget();
+    if (!topPanel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания верхней панели",
+                        "Не удалось создать виджет верхней панели");
+    }
     QHBoxLayout *topLayout = new QHBoxLayout(topPanel);
+    if (!topLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания макета верхней панели",
+                        "Не удалось создать горизонтальный макет для верхней панели");
+    }
     topLayout->setContentsMargins(0, 0, 0, 0);
 
     backButton = new QPushButton("← Назад");
+    if (!backButton) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания кнопки 'Назад'",
+                        "Не удалось создать кнопку возврата");
+    }
     backButton->setFixedSize(100, 35);
 
     topLayout->addWidget(backButton);
@@ -32,40 +57,95 @@ void RegistrationWindow::setupUI()
 
     // ===== ОСНОВНОЙ КОНТЕНТ =====
     QWidget *contentWidget = new QWidget();
+    if (!contentWidget) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания виджета контента",
+                        "Не удалось создать виджет для основного содержимого");
+    }
     QHBoxLayout *mainLayout = new QHBoxLayout(contentWidget);
+    if (!mainLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания основного макета",
+                        "Не удалось создать горизонтальный макет для содержимого");
+    }
     mainLayout->setSpacing(20);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     // ===== ЛЕВАЯ КОЛОНКА =====
     leftColumn = new QWidget();
+    if (!leftColumn) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания левой колонки",
+                        "Не удалось создать виджет левой колонки");
+    }
     QVBoxLayout *leftLayout = new QVBoxLayout(leftColumn);
+    if (!leftLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания макета левой колонки",
+                        "Не удалось создать вертикальный макет для левой колонки");
+    }
     leftLayout->setSpacing(12);
     leftLayout->setContentsMargins(0, 0, 0, 0);
 
     QLabel *titleLabel = new QLabel("РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ");
+    if (!titleLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания заголовка регистрации",
+                        "Не удалось создать метку заголовка регистрации");
+    }
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setMinimumHeight(35);
 
     QLabel *nameInfoLabel = new QLabel("Введите ваши данные:");
+    if (!nameInfoLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания информационной метки",
+                        "Не удалось создать метку с инструкцией");
+    }
     nameInfoLabel->setAlignment(Qt::AlignCenter);
     nameInfoLabel->setMinimumHeight(25);
 
     lastNameEdit = new QLineEdit();
+    if (!lastNameEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля фамилии",
+                        "Не удалось создать поле ввода фамилии");
+    }
     lastNameEdit->setPlaceholderText("Фамилия");
     lastNameEdit->setMinimumHeight(35);
 
     firstNameEdit = new QLineEdit();
+    if (!firstNameEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля имени",
+                        "Не удалось создать поле ввода имени");
+    }
     firstNameEdit->setPlaceholderText("Имя");
     firstNameEdit->setMinimumHeight(35);
 
     middleNameEdit = new QLineEdit();
+    if (!middleNameEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля отчества",
+                        "Не удалось создать поле ввода отчества");
+    }
     middleNameEdit->setPlaceholderText("Отчество");
     middleNameEdit->setMinimumHeight(35);
 
     confirmNameButton = new QPushButton("Подтвердить данные");
+    if (!confirmNameButton) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания кнопки подтверждения",
+                        "Не удалось создать кнопку подтверждения данных");
+    }
     confirmNameButton->setMinimumHeight(40);
 
     statusLabel = new QLabel();
+    if (!statusLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания метки статуса",
+                        "Не удалось создать метку для отображения статуса");
+    }
     statusLabel->setAlignment(Qt::AlignCenter);
     statusLabel->setWordWrap(true);
     statusLabel->setMinimumHeight(80);
@@ -81,39 +161,84 @@ void RegistrationWindow::setupUI()
 
     // ===== ПРАВАЯ КОЛОНКА =====
     rightColumn = new QWidget();
+    if (!rightColumn) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания правой колонки",
+                        "Не удалось создать виджет правой колонки");
+    }
     QVBoxLayout *rightLayout = new QVBoxLayout(rightColumn);
+    if (!rightLayout) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания макета правой колонки",
+                        "Не удалось создать вертикальный макет для правой колонки");
+    }
     rightLayout->setSpacing(3);
     rightLayout->setContentsMargins(0, 0, 0, 0);
 
     // Добавляем вертикальную линию-разделитель
     QFrame *verticalLine = new QFrame();
+    if (!verticalLine) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания разделителя",
+                        "Не удалось создать вертикальную линию-разделитель");
+    }
     verticalLine->setFrameShape(QFrame::VLine);
     verticalLine->setFrameShadow(QFrame::Sunken);
     verticalLine->setStyleSheet("background-color: #cccccc;");
 
     QLabel *regTitleLabel = new QLabel("СОЗДАНИЕ УЧЕТНОЙ ЗАПИСИ");
+    if (!regTitleLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания заголовка создания учетной записи",
+                        "Не удалось создать метку заголовка создания учетной записи");
+    }
     regTitleLabel->setAlignment(Qt::AlignCenter);
     regTitleLabel->setMinimumHeight(35);
 
     QLabel *regInfoLabel = new QLabel("Придумайте логин и пароль:");
+    if (!regInfoLabel) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания информационной метки регистрации",
+                        "Не удалось создать метку с инструкцией регистрации");
+    }
     regInfoLabel->setAlignment(Qt::AlignCenter);
     regInfoLabel->setMinimumHeight(25);
 
     loginEdit = new QLineEdit();
+    if (!loginEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля логина",
+                        "Не удалось создать поле ввода логина");
+    }
     loginEdit->setPlaceholderText("Логин");
     loginEdit->setMinimumHeight(35);
 
     passwordEdit = new QLineEdit();
+    if (!passwordEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля пароля",
+                        "Не удалось создать поле ввода пароля");
+    }
     passwordEdit->setPlaceholderText("Пароль");
     passwordEdit->setEchoMode(QLineEdit::Password);
     passwordEdit->setMinimumHeight(35);
 
     confirmPasswordEdit = new QLineEdit();
+    if (!confirmPasswordEdit) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания поля подтверждения пароля",
+                        "Не удалось создать поле ввода подтверждения пароля");
+    }
     confirmPasswordEdit->setPlaceholderText("Подтверждение пароля");
     confirmPasswordEdit->setEchoMode(QLineEdit::Password);
     confirmPasswordEdit->setMinimumHeight(35);
 
     completeRegistrationButton = new QPushButton("Зарегистрироваться");
+    if (!completeRegistrationButton) {
+        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
+                        "Ошибка создания кнопки регистрации",
+                        "Не удалось создать кнопку завершения регистрации");
+    }
     completeRegistrationButton->setMinimumHeight(40);
 
     rightLayout->addWidget(regTitleLabel);
@@ -139,12 +264,14 @@ void RegistrationWindow::setupUI()
     connect(confirmNameButton, &QPushButton::clicked, this, &RegistrationWindow::onConfirmNameClicked);
     connect(completeRegistrationButton, &QPushButton::clicked, this, &RegistrationWindow::onCompleteRegistrationClicked);
     connect(backButton, &QPushButton::clicked, this, &RegistrationWindow::onBackClicked);
+    TRY_CATCH_END
 }
 
 void RegistrationWindow::applyStyle()
 {
-    // Стили остаются без изменений
-    setStyleSheet(R"(
+    TRY_CATCH_BEGIN
+        // Стили остаются без изменений
+        setStyleSheet(R"(
         QDialog {
             background-color: #f0f0f0;
         }
@@ -208,11 +335,13 @@ void RegistrationWindow::applyStyle()
             min-height: 80px;
         }
     )");
+    TRY_CATCH_END
 }
 
 void RegistrationWindow::onBackClicked()
 {
-    if (!lastNameEdit->text().isEmpty() || !firstNameEdit->text().isEmpty() || !middleNameEdit->text().isEmpty()) {
+    TRY_CATCH_BEGIN
+        if (!lastNameEdit->text().isEmpty() || !firstNameEdit->text().isEmpty() || !middleNameEdit->text().isEmpty()) {
         QMessageBox::StandardButton reply = QMessageBox::question(this, "Подтверждение",
                                                                   "Вы уверены, что хотите вернуться? Все введенные данные будут потеряны.",
                                                                   QMessageBox::Yes | QMessageBox::No);
@@ -223,16 +352,47 @@ void RegistrationWindow::onBackClicked()
     }
 
     reject();
+    TRY_CATCH_END
 }
 
 void RegistrationWindow::onConfirmNameClicked()
 {
-    QString lastName = lastNameEdit->text().trimmed();
+    TRY_CATCH_BEGIN
+        QString lastName = lastNameEdit->text().trimmed();
     QString firstName = firstNameEdit->text().trimmed();
     QString middleName = middleNameEdit->text().trimmed();
 
+    // Валидация полей ФИО
     if (lastName.isEmpty() || firstName.isEmpty() || middleName.isEmpty()) {
         QMessageBox::warning(this, "Ошибка", "Заполните все поля ФИО");
+        return;
+    }
+
+    // Проверка минимальной длины
+    if (lastName.length() < 2) {
+        QMessageBox::warning(this, "Ошибка", "Фамилия должна содержать минимум 2 символа");
+        return;
+    }
+
+    if (firstName.length() < 2) {
+        QMessageBox::warning(this, "Ошибка", "Имя должно содержать минимум 2 символа");
+        return;
+    }
+
+    // Проверка на допустимые символы (только буквы, дефисы, пробелы)
+    QRegularExpression nameRegex("^[А-Яа-яЁёA-Za-z\\s\\-]+$");
+    if (!nameRegex.match(lastName).hasMatch()) {
+        QMessageBox::warning(this, "Ошибка", "Фамилия может содержать только буквы, дефисы и пробелы");
+        return;
+    }
+
+    if (!nameRegex.match(firstName).hasMatch()) {
+        QMessageBox::warning(this, "Ошибка", "Имя может содержать только буквы, дефисы и пробелы");
+        return;
+    }
+
+    if (!middleName.isEmpty() && !nameRegex.match(middleName).hasMatch()) {
+        QMessageBox::warning(this, "Ошибка", "Отчество может содержать только буквы, дефисы и пробелы");
         return;
     }
 
@@ -253,14 +413,17 @@ void RegistrationWindow::onConfirmNameClicked()
     } else {
         statusLabel->setText("❌ Пользователь с такими ФИО\nне найден в списке ожидания");
     }
+    TRY_CATCH_END
 }
 
 void RegistrationWindow::onCompleteRegistrationClicked()
 {
-    QString login = loginEdit->text().trimmed();
+    TRY_CATCH_BEGIN
+        QString login = loginEdit->text().trimmed();
     QString password = passwordEdit->text().trimmed();
     QString confirmPassword = confirmPasswordEdit->text().trimmed();
 
+    // Валидация полей (оставляем QMessageBox для пользовательских ошибок)
     if (login.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
         QMessageBox::warning(this, "Ошибка", "Заполните все поля");
         return;
@@ -273,6 +436,18 @@ void RegistrationWindow::onCompleteRegistrationClicked()
 
     if (password.length() < 4) {
         QMessageBox::warning(this, "Ошибка", "Пароль должен содержать минимум 4 символа");
+        return;
+    }
+
+    if (login.length() < 3) {
+        QMessageBox::warning(this, "Ошибка", "Логин должен содержать минимум 3 символа");
+        return;
+    }
+
+    // Проверка на допустимые символы в логине
+    QRegularExpression loginRegex("^[A-Za-z0-9_\\-]+$");
+    if (!loginRegex.match(login).hasMatch()) {
+        QMessageBox::warning(this, "Ошибка", "Логин может содержать только латинские буквы, цифры, дефисы и подчеркивания");
         return;
     }
 
@@ -290,14 +465,17 @@ void RegistrationWindow::onCompleteRegistrationClicked()
         QMessageBox::critical(this, "Ошибка",
                               "Не удалось завершить регистрацию.\n"
                               "Возможная причина:\n"
-                              "- Пользователь с таким логином уже существует");
+                              "- Пользователь с таким логином уже существует\n"
+                              "- Ошибка при сохранении данных");
     }
+    TRY_CATCH_END
 }
 
 void RegistrationWindow::showRegistrationFields()
 {
-    // Блокируем левую колонку
-    lastNameEdit->setEnabled(false);
+    TRY_CATCH_BEGIN
+        // Блокируем левую колонку
+        lastNameEdit->setEnabled(false);
     firstNameEdit->setEnabled(false);
     middleNameEdit->setEnabled(false);
     confirmNameButton->setEnabled(false);
@@ -306,7 +484,8 @@ void RegistrationWindow::showRegistrationFields()
     rightColumn->setVisible(true);
 
     // Показываем разделитель между колонками
-    QList<QFrame*> frames = findChildren<QFrame*>();
+    CustomList<QFrame*> frames;
+    frames.fromQList(findChildren<QFrame*>());
     for (QFrame* frame : frames) {
         if (frame->frameShape() == QFrame::VLine) {
             frame->setVisible(true);
@@ -319,4 +498,5 @@ void RegistrationWindow::showRegistrationFields()
 
     // Устанавливаем фокус на поле логина
     loginEdit->setFocus();
+    TRY_CATCH_END
 }
