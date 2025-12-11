@@ -32,7 +32,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         accountmanagementwindow.h accountmanagementwindow.cpp
         adduserwindow.h adduserwindow.cpp
         customlist.h
-        exceptionhandler.h exceptionhandler.cpp
+        deletionrecord.h deletionrecord.cpp
+        deletionhistory.h deletionhistory.cpp
+
 
 
     )

@@ -7,42 +7,7 @@
 
 UserManager::UserManager()
 {
-    // Проверяем, есть ли уже данные
-    if (!QFile::exists(m_adminsFile) && !QFile::exists(m_employeesFile)) {
-        initializeTestData();
-    } else {
-        loadUsers();
-    }
-}
-
-void UserManager::initializeTestData()
-{
-    // Очищаем все списки
-    qDeleteAll(m_pendingUsers);
-    m_pendingUsers.clear();
-    qDeleteAll(m_employees);
-    m_employees.clear();
-    qDeleteAll(m_admins);
-    m_admins.clear();
-
-    // Создаем тестового администратора
-    Administrator* admin = new Administrator("Иванов", "Админ", "Системович",
-                                             "admin", "admin123");
-    m_admins.append(admin);
-
-    // Создаем тестового работника
-    Employee* worker = new Employee("Петров", "Работник", "Складской",
-                                    "worker", "work123");
-    m_employees.append(worker);
-
-    // Создаем незарегистрированных пользователей с разными ролями
-    registerPendingUser("Сидоров", "Новый", "Администратор", UserRole::Administrator);
-    registerPendingUser("Кузнецов", "Новый", "Сотрудник", UserRole::Employee);
-
-    // Сохраняем тестовые данные
-    saveUsers();
-
-    qDebug() << "Тестовые данные инициализированы";
+    loadUsers();
 }
 
 User* UserManager::authenticateUser(const QString& login, const QString& password)

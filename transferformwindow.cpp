@@ -6,73 +6,39 @@
 #include <QDir>
 #include <QFile>
 #include <QDataStream>
+#include <QIntValidator>
 #include "mainwindow.h"
-#include "sectionwindow.h"
 #include "warehousewindow.h"
-#include "exceptionhandler.h" // Добавляем заголовок для обработки исключений
 
 TransferFormWindow::TransferFormWindow(const Product& product, int sourceSectionNumber,
-                                       const QString& materialType, bool isAdmin, UserManager* userManager, QWidget *parent)
+                                       const QString& materialType, bool isAdmin,
+                                       UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_product(product), m_sourceSectionNumber(sourceSectionNumber),
     m_materialType(materialType), m_isAdmin(isAdmin), m_userManager(userManager)
 {
-    TRY_CATCH_BEGIN
     setupUI();
-    applyStyle();
     setWindowTitle("Оформление трансфера");
-    setFixedSize(600, 650);
-    TRY_CATCH_END
+    setFixedSize(500, 500);
 }
 
 void TransferFormWindow::setupUI()
 {
-    TRY_CATCH_BEGIN
-        centralWidget = new QWidget(this);
-    if (!centralWidget) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания центрального виджета",
-                        "Не удалось создать центральный виджет окна трансфера");
-    }
+    QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    if (!mainLayout) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания главного макета",
-                        "Не удалось создать главный макет окна трансфера");
-    }
-    mainLayout->setSpacing(15);
+    mainLayout->setSpacing(10);
     mainLayout->setContentsMargins(20, 15, 20, 15);
 
-    // ===== ВЕРХНЯЯ ПАНЕЛЬ =====
+    // Верхняя панель
     QWidget *topPanel = new QWidget();
-    if (!topPanel) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания верхней панели",
-                        "Не удалось создать виджет верхней панели");
-    }
     QHBoxLayout *topLayout = new QHBoxLayout(topPanel);
-    if (!topLayout) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания макета верхней панели",
-                        "Не удалось создать макет для верхней панели");
-    }
     topLayout->setContentsMargins(0, 0, 0, 0);
 
-    backButton = new QPushButton("← Назад");
-    if (!backButton) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания кнопки 'Назад'",
-                        "Не удалось создать кнопку возврата");
-    }
-    backButton->setFixedSize(100, 35);
+    QPushButton *backButton = new QPushButton("← Назад");
+    backButton->setFixedSize(100, 30);
 
     QLabel *titleLabel = new QLabel("ОФОРМЛЕНИЕ ТРАНСФЕРА");
-    if (!titleLabel) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания заголовка",
-                        "Не удалось создать метку заголовка");
-    }
     titleLabel->setAlignment(Qt::AlignCenter);
 
     topLayout->addWidget(backButton);
@@ -80,146 +46,51 @@ void TransferFormWindow::setupUI()
     topLayout->addWidget(titleLabel);
     topLayout->addStretch();
 
-    // ===== ФОРМА ДАННЫХ =====
-    QWidget *formWidget = new QWidget();
-    if (!formWidget) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания виджета формы",
-                        "Не удалось создать виджет для формы данных");
-    }
-    QFormLayout *formLayout = new QFormLayout(formWidget);
-    if (!formLayout) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания макета формы",
-                        "Не удалось создать макет формы данных");
-    }
-    formLayout->setSpacing(12);
-    formLayout->setContentsMargins(0, 0, 0, 0);
-
-    // Поля только для чтения (автоматически заполняются)
-    productNameEdit = new QLineEdit(m_product.getName());
-    if (!productNameEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля названия товара",
-                        "Не удалось создать поле ввода для названия товара");
-    }
-    productNameEdit->setReadOnly(true);
-
-    productIndexEdit = new QLineEdit(m_product.getIndex());
-    if (!productIndexEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля индекса товара",
-                        "Не удалось создать поле ввода для индекса товара");
-    }
-    productIndexEdit->setReadOnly(true);
-
-    supplierEdit = new QLineEdit(m_product.getSupplier());
-    if (!supplierEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля поставщика",
-                        "Не удалось создать поле ввода для поставщика");
-    }
-    supplierEdit->setReadOnly(true);
-
-    cellNumberEdit = new QLineEdit(QString("Секция %1, Ячейка %2").arg(m_sourceSectionNumber).arg(m_product.getCellNumber()));
-    if (!cellNumberEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля текущего расположения",
-                        "Не удалось создать поле ввода для текущего расположения");
-    }
-    cellNumberEdit->setReadOnly(true);
-
-    availableQuantityEdit = new QLineEdit(QString::number(m_product.getQuantity()));
-    if (!availableQuantityEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля доступного количества",
-                        "Не удалось создать поле ввода для доступного количества");
-    }
-    availableQuantityEdit->setReadOnly(true);
+    // Поля только для чтения
+    QLabel *productNameLabel = new QLabel(QString("Название: %1").arg(m_product.getName()));
+    QLabel *productIndexLabel = new QLabel(QString("Индекс: %1").arg(m_product.getIndex()));
+    QLabel *supplierLabel = new QLabel(QString("Поставщик: %1").arg(m_product.getSupplier()));
+    QLabel *cellLabel = new QLabel(QString("Ячейка: %1, Секция: %2").arg(m_product.getCellNumber()).arg(m_sourceSectionNumber));
+    QLabel *quantityLabel = new QLabel(QString("Доступно: %1").arg(m_product.getQuantity()));
 
     // Поля для ввода
     transferQuantityEdit = new QLineEdit();
-    if (!transferQuantityEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля количества трансфера",
-                        "Не удалось создать поле ввода для количества трансфера");
-    }
     transferQuantityEdit->setPlaceholderText(QString("Макс: %1").arg(m_product.getQuantity()));
     transferQuantityEdit->setValidator(new QIntValidator(1, m_product.getQuantity(), this));
 
-    // Поля целевой секции и ячейки
     targetSectionCombo = new QComboBox();
-    if (!targetSectionCombo) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания комбобокса целевой секции",
-                        "Не удалось создать комбобокс для выбора целевой секции");
-    }
-    targetSectionCombo->setEnabled(false); // Изначально недоступно
-
     targetCellCombo = new QComboBox();
-    if (!targetCellCombo) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания комбобокса целевой ячейки",
-                        "Не удалось создать комбобокс для выбора целевой ячейки");
-    }
-    targetCellCombo->setEnabled(false);
 
-    // Поле даты
     dateEdit = new QDateEdit();
-    if (!dateEdit) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания поля даты",
-                        "Не удалось создать поле ввода даты");
-    }
     dateEdit->setDate(QDate::currentDate());
     dateEdit->setCalendarPopup(true);
     dateEdit->setDisplayFormat("dd.MM.yyyy");
 
-    QLabel *dateOptionalLabel = new QLabel("(необязательно)");
-    if (!dateOptionalLabel) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания метки даты",
-                        "Не удалось создать метку для даты");
-    }
-    dateOptionalLabel->setStyleSheet("color: #7f8c8d; font-size: 12px;");
-
-    QHBoxLayout *dateLayout = new QHBoxLayout();
-    if (!dateLayout) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания макета даты",
-                        "Не удалось создать макет для даты");
-    }
-    dateLayout->addWidget(dateEdit);
-    dateLayout->addWidget(dateOptionalLabel);
-    dateLayout->addStretch();
-
-    // Добавляем поля в форму
-    formLayout->addRow("Название товара:", productNameEdit);
-    formLayout->addRow("Индекс товара:", productIndexEdit);
-    formLayout->addRow("Поставщик:", supplierEdit);
-    formLayout->addRow("Текущее расположение:", cellNumberEdit);
-    formLayout->addRow("Доступное количество:", availableQuantityEdit);
-    formLayout->addRow("Количество для трансфера:*", transferQuantityEdit);
-    formLayout->addRow("Целевая секция:*", targetSectionCombo);
-    formLayout->addRow("Целевая ячейка:*", targetCellCombo);
-    formLayout->addRow("Дата трансфера:", dateLayout);
-
-    // ===== КНОПКА ОФОРМЛЕНИЯ =====
-    completeButton = new QPushButton("Оформить трансфер");
-    if (!completeButton) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания кнопки оформления",
-                        "Не удалось создать кнопку оформления трансфера");
-    }
-    completeButton->setFixedHeight(45);
+    // Кнопка оформления
+    QPushButton *completeButton = new QPushButton("Оформить трансфер");
+    completeButton->setFixedHeight(35);
 
     // Собираем все вместе
     mainLayout->addWidget(topPanel);
+    mainLayout->addWidget(productNameLabel);
+    mainLayout->addWidget(productIndexLabel);
+    mainLayout->addWidget(supplierLabel);
+    mainLayout->addWidget(cellLabel);
+    mainLayout->addWidget(quantityLabel);
+
+    QWidget *formWidget = new QWidget();
+    QFormLayout *formLayout = new QFormLayout(formWidget);
+    formLayout->setSpacing(10);
+    formLayout->addRow("Количество:*", transferQuantityEdit);
+    formLayout->addRow("Целевая секция:*", targetSectionCombo);
+    formLayout->addRow("Целевая ячейка:*", targetCellCombo);
+    formLayout->addRow("Дата:", dateEdit);
+
     mainLayout->addWidget(formWidget);
     mainLayout->addStretch();
     mainLayout->addWidget(completeButton);
 
-    // Подключаем сигналы
+    // Подключение сигналов
     connect(backButton, &QPushButton::clicked, this, &TransferFormWindow::onBackClicked);
     connect(completeButton, &QPushButton::clicked, this, &TransferFormWindow::onCompleteTransferClicked);
     connect(targetSectionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -227,89 +98,11 @@ void TransferFormWindow::setupUI()
 
     // Автоматически заполняем секции на основе типа материала
     updateTargetSectionsComboBox(m_materialType);
-    TRY_CATCH_END
-}
-
-void TransferFormWindow::applyStyle()
-{
-    TRY_CATCH_BEGIN
-        setStyleSheet(R"(
-        QMainWindow {
-            background-color: #f0f0f0;
-        }
-        QWidget {
-            background-color: #f0f0f0;
-        }
-        QLabel {
-            color: #2c3e50;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 5px;
-        }
-        QPushButton {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 15px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        QPushButton:hover {
-            background-color: #2980b9;
-        }
-        QPushButton:pressed {
-            background-color: #2471a3;
-        }
-        QPushButton#backButton {
-            background-color: #95a5a6;
-        }
-        QPushButton#backButton:hover {
-            background-color: #7f8c8d;
-        }
-        QPushButton#completeButton {
-            background-color: #f39c12;
-            font-size: 16px;
-        }
-        QPushButton#completeButton:hover {
-            background-color: #e67e22;
-        }
-        QLineEdit, QComboBox, QDateEdit {
-            background-color: white;
-            border: 2px solid #bdc3c7;
-            border-radius: 5px;
-            padding: 8px;
-            font-size: 14px;
-            min-height: 20px;
-            color: #000000;
-        }
-        QLineEdit:read-only {
-            background-color: #f8f9fa;
-            color: #6c757d;
-        }
-        QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
-            border-color: #3498db;
-        }
-        QComboBox:focus {
-            border-color: #3498db;
-        }
-        QComboBox QAbstractItemView {
-            background-color: white;
-            border: 1px solid #bdc3c7;
-            selection-background-color: #3498db;
-            color: #000000;
-        }
-    )");
-
-    backButton->setObjectName("backButton");
-    completeButton->setObjectName("completeButton");
-    TRY_CATCH_END
 }
 
 void TransferFormWindow::updateTargetSectionsComboBox(const QString& productType)
 {
-    TRY_CATCH_BEGIN
-        targetSectionCombo->clear();
+    targetSectionCombo->clear();
     targetSectionCombo->setEnabled(true);
 
     // Определяем диапазон секций по типу товара
@@ -331,7 +124,6 @@ void TransferFormWindow::updateTargetSectionsComboBox(const QString& productType
 
     // Автоматически выбираем первую доступную секцию (кроме текущей)
     if (targetSectionCombo->count() > 0) {
-        // Ищем секцию, отличную от текущей
         for (int i = 0; i < targetSectionCombo->count(); ++i) {
             int sectionNumber = targetSectionCombo->itemData(i).toInt();
             if (sectionNumber != m_sourceSectionNumber) {
@@ -340,7 +132,6 @@ void TransferFormWindow::updateTargetSectionsComboBox(const QString& productType
             }
         }
 
-        // Если все секции совпадают с текущей, выбираем первую
         if (targetSectionCombo->currentIndex() == -1 && targetSectionCombo->count() > 0) {
             targetSectionCombo->setCurrentIndex(0);
         }
@@ -351,23 +142,20 @@ void TransferFormWindow::updateTargetSectionsComboBox(const QString& productType
         int targetSectionNumber = targetSectionCombo->currentData().toInt();
         updateTargetCellsComboBox(targetSectionNumber);
     }
-    TRY_CATCH_END
 }
 
 void TransferFormWindow::onTargetSectionChanged(int index)
 {
-    TRY_CATCH_BEGIN
-        if (index < 0) return;
+    if (index < 0) return;
 
     int targetSectionNumber = targetSectionCombo->itemData(index).toInt();
     updateTargetCellsComboBox(targetSectionNumber);
-    TRY_CATCH_END
 }
 
 void TransferFormWindow::updateTargetCellsComboBox(int targetSectionNumber)
 {
-    TRY_CATCH_BEGIN
-        targetCellCombo->clear();
+    Q_UNUSED(targetSectionNumber);
+    targetCellCombo->clear();
     targetCellCombo->setEnabled(true);
 
     // Добавляем доступные ячейки (1-60)
@@ -379,14 +167,11 @@ void TransferFormWindow::updateTargetCellsComboBox(int targetSectionNumber)
     if (targetCellCombo->count() > 0) {
         targetCellCombo->setCurrentIndex(0);
     }
-    TRY_CATCH_END
 }
 
 void TransferFormWindow::onCompleteTransferClicked()
 {
-    TRY_CATCH_BEGIN
-        // Валидация полей (пользовательские ошибки - оставляем QMessageBox)
-        if (transferQuantityEdit->text().trimmed().isEmpty()) {
+    if (transferQuantityEdit->text().trimmed().isEmpty()) {
         QMessageBox::warning(this, "Ошибка", "Заполните поле 'Количество для трансфера'");
         return;
     }
@@ -437,7 +222,7 @@ void TransferFormWindow::onCompleteTransferClicked()
             Product existingProduct;
             in >> existingProduct;
             if (existingProduct.getCellNumber() == targetCellNumber) {
-                // Проверяем, можно ли объединить товары (одинаковые название, индекс, поставщик)
+                // Проверяем, можно ли объединить товары
                 if (existingProduct.getName() != m_product.getName() ||
                     existingProduct.getIndex() != m_product.getIndex() ||
                     existingProduct.getSupplier() != m_product.getSupplier()) {
@@ -455,35 +240,20 @@ void TransferFormWindow::onCompleteTransferClicked()
     }
 
     // Сохраняем данные
-    saveTransferToFile();
+    saveTransfer();
+    QMessageBox::information(this, "Успех", "Трансфер успешно оформлен!");
 
-    // Используем ExceptionHandler для информационного сообщения
-    ExceptionHandler::showMessageBox(ErrorSeverity::INFO, "Успех",
-                                     "Трансфер успешно оформлен!", this);
-
-    // Возвращаемся в главное меню
     MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
-    if (!mainWindow) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания главного окна",
-                        "Не удалось создать экземпляр MainWindow");
-    }
     mainWindow->show();
     this->close();
-    TRY_CATCH_END
 }
 
-void TransferFormWindow::saveTransferToFile()
+void TransferFormWindow::saveTransfer()
 {
-    TRY_CATCH_BEGIN
-        int transferQuantity = transferQuantityEdit->text().toInt();
+    int transferQuantity = transferQuantityEdit->text().toInt();
     int targetSectionNumber = targetSectionCombo->currentData().toInt();
     int targetCellNumber = targetCellCombo->currentData().toInt();
-
     QDateTime transferDate = dateEdit->dateTime();
-    if (!dateEdit->date().isValid()) {
-        transferDate = QDateTime::currentDateTime();
-    }
 
     // Создаем операцию трансфера
     Operation operation(m_product.getName(), m_product.getIndex(), transferQuantity,
@@ -491,21 +261,13 @@ void TransferFormWindow::saveTransferToFile()
                         QString("Секция %1, Ячейка №%2").arg(targetSectionNumber).arg(targetCellNumber),
                         Operation::TRANSFER, transferDate.date());
 
-    // Сохраняем операцию в историю ИСХОДНОЙ секции
+    // Сохраняем операцию в историю исходной секции
     QString sourceHistoryFile = QString("operations_history/section_history_%1.bin").arg(m_sourceSectionNumber);
-    QDir historyDir("operations_history");
-    if (!historyDir.exists() && !historyDir.mkpath(".")) {
-        THROW_FILE_ERROR("operations_history", "создания директории",
-                         "Не удалось создать директорию для истории операций");
-    }
+    QDir().mkpath("operations_history");
 
-    CustomList<Operation> sourceOperations;
+    QList<Operation> sourceOperations;
     QFile hFile(sourceHistoryFile);
-    if (hFile.exists()) {
-        if (!hFile.open(QIODevice::ReadOnly)) {
-            THROW_FILE_ERROR(sourceHistoryFile, "открытия для чтения",
-                             "Не удалось прочитать историю операций исходной секции");
-        }
+    if (hFile.open(QIODevice::ReadOnly)) {
         QDataStream in(&hFile);
         quint32 size;
         in >> size;
@@ -519,26 +281,20 @@ void TransferFormWindow::saveTransferToFile()
 
     sourceOperations.append(operation);
 
-    if (!hFile.open(QIODevice::WriteOnly)) {
-        THROW_FILE_ERROR(sourceHistoryFile, "открытия для записи",
-                         "Не удалось сохранить историю операций исходной секции");
-    }
-    QDataStream outHistory(&hFile);
-    outHistory << static_cast<quint32>(sourceOperations.size());
-    for (const Operation& op : sourceOperations) {
-        outHistory << op;
-    }
-    hFile.close();
-
-    // Сохраняем операцию в историю ЦЕЛЕВОЙ секции
-    QString targetHistoryFile = QString("operations_history/section_history_%1.bin").arg(targetSectionNumber);
-    CustomList<Operation> targetOperations;
-    QFile hFile2(targetHistoryFile);
-    if (hFile2.exists()) {
-        if (!hFile2.open(QIODevice::ReadOnly)) {
-            THROW_FILE_ERROR(targetHistoryFile, "открытия для чтения",
-                             "Не удалось прочитать историю операций целевой секции");
+    if (hFile.open(QIODevice::WriteOnly)) {
+        QDataStream out(&hFile);
+        out << static_cast<quint32>(sourceOperations.size());
+        for (const Operation& op : sourceOperations) {
+            out << op;
         }
+        hFile.close();
+    }
+
+    // Сохраняем операцию в историю целевой секции
+    QString targetHistoryFile = QString("operations_history/section_history_%1.bin").arg(targetSectionNumber);
+    QList<Operation> targetOperations;
+    QFile hFile2(targetHistoryFile);
+    if (hFile2.open(QIODevice::ReadOnly)) {
         QDataStream in(&hFile2);
         quint32 size;
         in >> size;
@@ -552,26 +308,20 @@ void TransferFormWindow::saveTransferToFile()
 
     targetOperations.append(operation);
 
-    if (!hFile2.open(QIODevice::WriteOnly)) {
-        THROW_FILE_ERROR(targetHistoryFile, "открытия для записи",
-                         "Не удалось сохранить историю операций целевой секции");
-    }
-    QDataStream outHistory2(&hFile2);
-    outHistory2 << static_cast<quint32>(targetOperations.size());
-    for (const Operation& op : targetOperations) {
-        outHistory2 << op;
-    }
-    hFile2.close();
-
-    // Обновляем товар в ИСХОДНОЙ секции (уменьшаем количество или удаляем)
-    QString sourceProductsFile = QString("sections/section_%1.bin").arg(m_sourceSectionNumber);
-    CustomList<Product> sourceProducts;
-    QFile pFile(sourceProductsFile);
-    if (pFile.exists()) {
-        if (!pFile.open(QIODevice::ReadOnly)) {
-            THROW_FILE_ERROR(sourceProductsFile, "открытия для чтения",
-                             "Не удалось прочитать список товаров исходной секции");
+    if (hFile2.open(QIODevice::WriteOnly)) {
+        QDataStream out(&hFile2);
+        out << static_cast<quint32>(targetOperations.size());
+        for (const Operation& op : targetOperations) {
+            out << op;
         }
+        hFile2.close();
+    }
+
+    // Обновляем товар в исходной секции
+    QString sourceProductsFile = QString("sections/section_%1.bin").arg(m_sourceSectionNumber);
+    QList<Product> sourceProducts;
+    QFile pFile(sourceProductsFile);
+    if (pFile.open(QIODevice::ReadOnly)) {
         QDataStream in(&pFile);
         quint32 size;
         in >> size;
@@ -592,10 +342,8 @@ void TransferFormWindow::saveTransferToFile()
             int newQuantity = sourceProducts[i].getQuantity() - transferQuantity;
 
             if (newQuantity <= 0) {
-                // Удаляем товар, если количество стало 0 или меньше
                 sourceProducts.removeAt(i);
             } else {
-                // Обновляем количество
                 sourceProducts[i].setQuantity(newQuantity);
             }
             sourceProductFound = true;
@@ -604,36 +352,25 @@ void TransferFormWindow::saveTransferToFile()
     }
 
     if (!sourceProductFound) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::VALIDATION,
-                        "Товар не найден в исходной секции",
-                        QString("Товар '%1' с индексом '%2' в ячейке %3 не найден в секции %4")
-                            .arg(m_product.getName())
-                            .arg(m_product.getIndex())
-                            .arg(m_product.getCellNumber())
-                            .arg(m_sourceSectionNumber));
+        QMessageBox::warning(this, "Ошибка", "Товар не найден в исходной секции");
+        return;
     }
 
     // Сохраняем обновленный список товаров исходной секции
-    if (!pFile.open(QIODevice::WriteOnly)) {
-        THROW_FILE_ERROR(sourceProductsFile, "открытия для записи",
-                         "Не удалось сохранить обновленный список товаров исходной секции");
-    }
-    QDataStream outProducts(&pFile);
-    outProducts << static_cast<quint32>(sourceProducts.size());
-    for (const Product& prod : sourceProducts) {
-        outProducts << prod;
-    }
-    pFile.close();
-
-    // Добавляем товар в ЦЕЛЕВУЮ секцию
-    QString targetProductsFile = QString("sections/section_%1.bin").arg(targetSectionNumber);
-    CustomList<Product> targetProducts;
-    QFile pFile2(targetProductsFile);
-    if (pFile2.exists()) {
-        if (!pFile2.open(QIODevice::ReadOnly)) {
-            THROW_FILE_ERROR(targetProductsFile, "открытия для чтения",
-                             "Не удалось прочитать список товаров целевой секции");
+    if (pFile.open(QIODevice::WriteOnly)) {
+        QDataStream out(&pFile);
+        out << static_cast<quint32>(sourceProducts.size());
+        for (const Product& prod : sourceProducts) {
+            out << prod;
         }
+        pFile.close();
+    }
+
+    // Добавляем товар в целевую секцию
+    QString targetProductsFile = QString("sections/section_%1.bin").arg(targetSectionNumber);
+    QList<Product> targetProducts;
+    QFile pFile2(targetProductsFile);
+    if (pFile2.open(QIODevice::ReadOnly)) {
         QDataStream in(&pFile2);
         quint32 size;
         in >> size;
@@ -649,7 +386,6 @@ void TransferFormWindow::saveTransferToFile()
     bool productExists = false;
     for (int i = 0; i < targetProducts.size(); ++i) {
         if (targetProducts[i].getCellNumber() == targetCellNumber) {
-            // Если это тот же товар - обновляем количество
             if (targetProducts[i].getName() == m_product.getName() &&
                 targetProducts[i].getIndex() == m_product.getIndex() &&
                 targetProducts[i].getSupplier() == m_product.getSupplier()) {
@@ -661,35 +397,24 @@ void TransferFormWindow::saveTransferToFile()
     }
 
     if (!productExists) {
-        // Добавляем новый товар в целевую секцию
         targetProducts.append(Product(m_product.getName(), m_product.getIndex(),
                                       transferQuantity, m_product.getSupplier(), targetCellNumber));
     }
 
     // Сохраняем обновленный список товаров целевой секции
-    if (!pFile2.open(QIODevice::WriteOnly)) {
-        THROW_FILE_ERROR(targetProductsFile, "открытия для записи",
-                         "Не удалось сохранить обновленный список товаров целевой секции");
+    if (pFile2.open(QIODevice::WriteOnly)) {
+        QDataStream out(&pFile2);
+        out << static_cast<quint32>(targetProducts.size());
+        for (const Product& prod : targetProducts) {
+            out << prod;
+        }
+        pFile2.close();
     }
-    QDataStream outProducts2(&pFile2);
-    outProducts2 << static_cast<quint32>(targetProducts.size());
-    for (const Product& prod : targetProducts) {
-        outProducts2 << prod;
-    }
-    pFile2.close();
-    TRY_CATCH_END
 }
 
 void TransferFormWindow::onBackClicked()
 {
-    TRY_CATCH_BEGIN
-        WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "transfer", m_userManager);
-    if (!warehouseWindow) {
-        THROW_EXCEPTION(ErrorSeverity::ERROR, ErrorSource::SYSTEM,
-                        "Ошибка создания окна склада",
-                        "Не удалось создать экземпляр WarehouseWindow");
-    }
+    WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "transfer", m_userManager);
     warehouseWindow->show();
     this->close();
-    TRY_CATCH_END
 }

@@ -2,15 +2,11 @@
 #define DELIVERYWINDOW_H
 
 #include <QMainWindow>
-#include <QWidget>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QDateEdit>
-#include <QScrollArea>
 #include "usermanager.h"
 
 class DeliveryWindow : public QMainWindow
@@ -21,35 +17,26 @@ public:
     explicit DeliveryWindow(bool isAdmin, UserManager* userManager = nullptr, QWidget *parent = nullptr);
 
 private slots:
-    void onAddProductClicked();
-    void onRemoveProductClicked();
     void onCompleteDeliveryClicked();
     void onBackClicked();
     void onProductTypeChanged(int index);
 
 private:
     void setupUI();
-    void applyStyle();
-    void addProductFields();
-    void updateSectionComboBox(QComboBox* sectionCombo, const QString& productType);
-    void saveDeliveryToFiles();
+    void updateSectionComboBox();
+    void saveDelivery();
 
     bool m_isAdmin;
-    bool validateAndPrepareDelivery();
-
-    QWidget *centralWidget;
-    QScrollArea *scrollArea;
-    QWidget *scrollContent;
+    UserManager* m_userManager;
 
     QLineEdit *supplierEdit;
     QDateEdit *dateEdit;
-
-    QVBoxLayout *productsLayout;
-    CustomList<QWidget*> productWidgets;
-
-    QPushButton *completeButton;
-    QPushButton *backButton;
-    UserManager* m_userManager;
+    QComboBox *typeCombo;
+    QLineEdit *nameEdit;
+    QLineEdit *indexEdit;
+    QLineEdit *quantityEdit;
+    QComboBox *sectionCombo;
+    QLineEdit *cellEdit;
 };
 
 #endif // DELIVERYWINDOW_H

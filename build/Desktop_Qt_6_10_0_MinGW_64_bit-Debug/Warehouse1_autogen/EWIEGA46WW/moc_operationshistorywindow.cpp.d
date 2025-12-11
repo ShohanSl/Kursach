@@ -153,7 +153,6 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qkeysequence.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpaintdevice.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpalette.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qpen.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpicture.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpixelformat.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpixmap.h \
@@ -161,10 +160,7 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qregion.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qrgb.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qrgba64.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextcursor.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtextdocument.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextformat.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextoption.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtgui-config.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtguiexports.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtguiglobal.h \
@@ -172,10 +168,8 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qvalidator.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs_win.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QInputDialog \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLabel \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMainWindow \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMenu \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QPushButton \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QTableWidget \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractbutton.h \
@@ -184,13 +178,9 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractscrollarea.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractslider.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractspinbox.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qdialog.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qframe.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qinputdialog.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlabel.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlineedit.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmainwindow.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmenu.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qpushbutton.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qrubberband.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qsizepolicy.h \

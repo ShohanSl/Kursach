@@ -40,19 +40,16 @@ template <> constexpr inline auto RegistrationWindow::qt_create_metaobjectdata<q
     namespace QMC = QtMocConstants;
     QtMocHelpers::StringRefStorage qt_stringData {
         "RegistrationWindow",
-        "onConfirmNameClicked",
-        "",
         "onCompleteRegistrationClicked",
+        "",
         "onBackClicked"
     };
 
     QtMocHelpers::UintData qt_methods {
-        // Slot 'onConfirmNameClicked'
-        QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onCompleteRegistrationClicked'
-        QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onBackClicked'
-        QtMocHelpers::SlotData<void()>(4, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -76,9 +73,8 @@ void RegistrationWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, i
     auto *_t = static_cast<RegistrationWindow *>(_o);
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: _t->onConfirmNameClicked(); break;
-        case 1: _t->onCompleteRegistrationClicked(); break;
-        case 2: _t->onBackClicked(); break;
+        case 0: _t->onCompleteRegistrationClicked(); break;
+        case 1: _t->onBackClicked(); break;
         default: ;
         }
     }
@@ -104,14 +100,14 @@ int RegistrationWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 2)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 2;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 2)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 3;
+        _id -= 2;
     }
     return _id;
 }

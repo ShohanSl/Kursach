@@ -23,9 +23,9 @@ SOURCES += \
     shipmentformwindow.cpp \
     transferformwindow.cpp \
     accountmanagementwindow.cpp \
-    accountmanagementwindow.cpp \
     adduserwindow.cpp \
-    exceptionhandler.cpp
+    deletionrecord.cpp \
+    deletionhistory.cpp
 
 HEADERS += \
     loginwindow.h \
@@ -41,13 +41,13 @@ HEADERS += \
     operation.h \
     operationshistorywindow.h \
     deliverywindow.h \
-    shipmentformwindow.cpp \
+    shipmentformwindow.h \
     transferformwindow.h \
-    accountmanagementwindow.h \
     accountmanagementwindow.h \
     adduserwindow.h \
     customlist.h \
-    exceptionhandler.h
+    deletionrecord.h \
+    deletionhistory.h
 
 # Установка кодировки
 QMAKE_CXXFLAGS += -finput-charset=UTF-8

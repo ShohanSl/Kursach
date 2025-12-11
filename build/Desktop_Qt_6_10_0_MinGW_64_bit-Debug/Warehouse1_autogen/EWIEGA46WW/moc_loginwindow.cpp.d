@@ -1,8 +1,5 @@
 F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIEGA46WW/moc_loginwindow.cpp: F:/Warehouse1/loginwindow.h \
   F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/moc_predefs.h \
-  F:/Qt/6.10.0/mingw_64/include/QtCore/QDataStream \
-  F:/Qt/6.10.0/mingw_64/include/QtCore/QList \
-  F:/Qt/6.10.0/mingw_64/include/QtCore/QString \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q17memory.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q20functional.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q20iterator.h \
@@ -52,7 +49,6 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/qglobalstatic.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qhash.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qhashfunctions.h \
-  F:/Qt/6.10.0/mingw_64/include/QtCore/qiodevice.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qiodevicebase.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qiterable.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qiterator.h \
@@ -125,7 +121,6 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/qtversionchecks.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qtypeinfo.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qtypes.h \
-  F:/Qt/6.10.0/mingw_64/include/QtCore/qurl.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qutf8stringview.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qvariant.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qvarlengtharray.h \
@@ -146,43 +141,20 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qkeysequence.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpaintdevice.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpalette.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qpen.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qpicture.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpixelformat.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpixmap.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpolygon.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qregion.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qrgb.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qrgba64.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextcursor.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextdocument.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextformat.h \
-  F:/Qt/6.10.0/mingw_64/include/QtGui/qtextoption.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtgui-config.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtguiexports.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtguiglobal.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtransform.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs_win.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QDialog \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QHBoxLayout \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLabel \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLineEdit \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMainWindow \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QPushButton \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QVBoxLayout \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QWidget \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractbutton.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qboxlayout.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qdialog.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qframe.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qgridlayout.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlabel.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlayout.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlayoutitem.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlineedit.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmainwindow.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qpushbutton.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qsizepolicy.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qtabwidget.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qtwidgets-config.h \
@@ -401,10 +373,4 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/sys/types.h \
   F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/time.h \
   F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/vadefs.h \
-  F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wchar.h \
-  F:/Warehouse1/administrator.h \
-  F:/Warehouse1/customlist.h \
-  F:/Warehouse1/employee.h \
-  F:/Warehouse1/registrationwindow.h \
-  F:/Warehouse1/user.h \
-  F:/Warehouse1/usermanager.h
+  F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wchar.h

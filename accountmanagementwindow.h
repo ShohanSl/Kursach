@@ -7,8 +7,6 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QLabel>
-#include <QScrollArea>
-#include <QMenu>
 #include "usermanager.h"
 
 class AccountManagementWindow : public QMainWindow
@@ -24,50 +22,35 @@ private slots:
     void onSearchTextChanged(const QString& text);
     void onSearchCriteriaChanged(int index);
     void onDeleteUser();
-    void updateTables();
 
 private:
     void setupUI();
-    void applyStyle();
     void setupTable(QTableWidget *table, const QStringList &headers);
     void loadEmployeesTable();
     void loadAdminsTable();
     void loadPendingUsersTable();
-    void filterTable(QTableWidget *table, const CustomList<QStringList> &allData, const QString& searchText, int searchCriteria);
+    void filterTable(QTableWidget *table, const CustomList<QStringList> &allData,
+                     const QString& searchText, int searchCriteria);
     void setupContextMenu(QTableWidget *table, const QString& userType);
+    void updateTables();
 
     UserManager *m_userManager;
 
-    QWidget *centralWidget;
-    QScrollArea *scrollArea;
-    QWidget *scrollContent;
-
-    // Элементы для сотрудников
-    QLabel *employeesLabel;
-    QLineEdit *employeesSearchEdit;
-    QComboBox *employeesSearchCombo;
     QTableWidget *employeesTable;
-
-    // Элементы для администраторов
-    QLabel *adminsLabel;
-    QLineEdit *adminsSearchEdit;
-    QComboBox *adminsSearchCombo;
     QTableWidget *adminsTable;
-
-    // Элементы для ожидающих пользователей
-    QLabel *pendingUsersLabel;
-    QLineEdit *pendingUsersSearchEdit;
-    QComboBox *pendingUsersSearchCombo;
     QTableWidget *pendingUsersTable;
 
-    QPushButton *backButton;
+    QLineEdit *employeesSearchEdit;
+    QComboBox *employeesSearchCombo;
+    QLineEdit *adminsSearchEdit;
+    QComboBox *adminsSearchCombo;
+    QLineEdit *pendingUsersSearchEdit;
+    QComboBox *pendingUsersSearchCombo;
 
-    // Данные таблиц
     CustomList<QStringList> m_employeesData;
     CustomList<QStringList> m_adminsData;
     CustomList<QStringList> m_pendingUsersData;
 
-    QMenu *contextMenu;
     QString m_selectedUserType;
     int m_selectedRow;
 };

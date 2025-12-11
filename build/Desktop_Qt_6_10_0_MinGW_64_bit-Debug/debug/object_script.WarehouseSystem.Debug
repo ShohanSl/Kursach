@@ -5,7 +5,6 @@ debug/user.o
 debug/employee.o
 debug/administrator.o
 debug/usermanager.o
-debug/errorhandler.o
 debug/mainwindow.o
 debug/warehousewindow.o
 debug/sectionwindow.o
@@ -16,8 +15,9 @@ debug/deliverywindow.o
 debug/shipmentformwindow.o
 debug/transferformwindow.o
 debug/accountmanagementwindow.o
-debug/accountmanagementwindow.o
 debug/adduserwindow.o
+debug/deletionrecord.o
+debug/deletionhistory.o
 debug/moc_loginwindow.o
 debug/moc_registrationwindow.o
 debug/moc_mainwindow.o
@@ -25,6 +25,8 @@ debug/moc_warehousewindow.o
 debug/moc_sectionwindow.o
 debug/moc_operationshistorywindow.o
 debug/moc_deliverywindow.o
+debug/moc_shipmentformwindow.o
 debug/moc_transferformwindow.o
 debug/moc_accountmanagementwindow.o
 debug/moc_adduserwindow.o
+debug/moc_deletionhistory.o

@@ -47,8 +47,7 @@ template <> constexpr inline auto AccountManagementWindow::qt_create_metaobjectd
         "text",
         "onSearchCriteriaChanged",
         "index",
-        "onDeleteUser",
-        "updateTables"
+        "onDeleteUser"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -66,8 +65,6 @@ template <> constexpr inline auto AccountManagementWindow::qt_create_metaobjectd
         }}),
         // Slot 'onDeleteUser'
         QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'updateTables'
-        QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -96,7 +93,6 @@ void AccountManagementWindow::qt_static_metacall(QObject *_o, QMetaObject::Call 
         case 2: _t->onSearchTextChanged((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
         case 3: _t->onSearchCriteriaChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
         case 4: _t->onDeleteUser(); break;
-        case 5: _t->updateTables(); break;
         default: ;
         }
     }
@@ -121,14 +117,14 @@ int AccountManagementWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 6)
+        if (_id < 5)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 5;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 6)
+        if (_id < 5)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 6;
+        _id -= 5;
     }
     return _id;
 }

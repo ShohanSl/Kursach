@@ -2,14 +2,10 @@
 #define LOGINWINDOW_H
 
 #include <QMainWindow>
-#include <QWidget>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QLabel>
-#include "usermanager.h"
-#include "registrationwindow.h"
-#include "user.h"
+
+class QLineEdit;
+class QPushButton;
+class UserManager;
 
 class LoginWindow : public QMainWindow
 {
@@ -17,6 +13,7 @@ class LoginWindow : public QMainWindow
 
 public:
     LoginWindow(QWidget *parent = nullptr);
+    ~LoginWindow();
 
 private slots:
     void onLoginClicked();
@@ -24,14 +21,11 @@ private slots:
 
 private:
     void setupUI();
-    void applyStyle();
 
-    QWidget *centralWidget;
     QLineEdit *loginEdit;
     QLineEdit *passwordEdit;
     QPushButton *loginButton;
     QPushButton *registerButton;
-    QPushButton *initTestDataButton;
     UserManager *userManager;
 };
 

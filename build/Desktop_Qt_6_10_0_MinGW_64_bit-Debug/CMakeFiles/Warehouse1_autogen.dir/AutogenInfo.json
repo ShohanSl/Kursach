@@ -347,18 +347,24 @@
 			null
 		],
 		[
+			"F:/Warehouse1/deletionhistory.h",
+			"MU",
+			"EWIEGA46WW/moc_deletionhistory.cpp",
+			null
+		],
+		[
+			"F:/Warehouse1/deletionrecord.h",
+			"MU",
+			"EWIEGA46WW/moc_deletionrecord.cpp",
+			null
+		],
+		[
 			"F:/Warehouse1/deliverywindow.h",
 			"MU",
 			"EWIEGA46WW/moc_deliverywindow.cpp",
 			null
 		],
 		[ "F:/Warehouse1/employee.h", "MU", "EWIEGA46WW/moc_employee.cpp", null ],
-		[
-			"F:/Warehouse1/exceptionhandler.h",
-			"MU",
-			"EWIEGA46WW/moc_exceptionhandler.cpp",
-			null
-		],
 		[
 			"F:/Warehouse1/loginwindow.h",
 			"MU",
@@ -496,9 +502,10 @@
 		[ "F:/Warehouse1/accountmanagementwindow.cpp", "MU", null ],
 		[ "F:/Warehouse1/adduserwindow.cpp", "MU", null ],
 		[ "F:/Warehouse1/administrator.cpp", "MU", null ],
+		[ "F:/Warehouse1/deletionhistory.cpp", "MU", null ],
+		[ "F:/Warehouse1/deletionrecord.cpp", "MU", null ],
 		[ "F:/Warehouse1/deliverywindow.cpp", "MU", null ],
 		[ "F:/Warehouse1/employee.cpp", "MU", null ],
-		[ "F:/Warehouse1/exceptionhandler.cpp", "MU", null ],
 		[ "F:/Warehouse1/loginwindow.cpp", "MU", null ],
 		[ "F:/Warehouse1/main.cpp", "MU", null ],
 		[ "F:/Warehouse1/mainwindow.cpp", "MU", null ],

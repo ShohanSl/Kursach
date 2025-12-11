@@ -173,9 +173,7 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLabel \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLineEdit \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMainWindow \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMenu \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QPushButton \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QScrollArea \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QTableWidget \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractbutton.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
@@ -188,10 +186,8 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlabel.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlineedit.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmainwindow.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmenu.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qpushbutton.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qrubberband.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qscrollarea.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qsizepolicy.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qslider.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qstyle.h \

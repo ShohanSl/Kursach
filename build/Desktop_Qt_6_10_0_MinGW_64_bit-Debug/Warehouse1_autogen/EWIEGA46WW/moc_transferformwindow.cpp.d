@@ -174,25 +174,18 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs_win.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QComboBox \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QDateEdit \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QHBoxLayout \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLabel \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLineEdit \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMainWindow \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QPushButton \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QVBoxLayout \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QWidget \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractbutton.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractslider.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractspinbox.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qboxlayout.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qcombobox.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qdatetimeedit.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qframe.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qgridlayout.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlabel.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlayout.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlayoutitem.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlineedit.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmainwindow.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qpushbutton.h \

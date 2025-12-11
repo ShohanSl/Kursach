@@ -3,6 +3,10 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/QDataStream \
   F:/Qt/6.10.0/mingw_64/include/QtCore/QDate \
   F:/Qt/6.10.0/mingw_64/include/QtCore/QList \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/QObject \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/QRect \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/QSize \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/QSizeF \
   F:/Qt/6.10.0/mingw_64/include/QtCore/QString \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q17memory.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q20functional.h \
@@ -11,6 +15,7 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/q20type_traits.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q20utility.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/q23utility.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qabstracteventdispatcher.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qabstractitemmodel.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qalgorithms.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qalloc.h \
@@ -22,6 +27,7 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/qatomic.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qatomic_cxx11.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qbasicatomic.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qbasictimer.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qbindingstorage.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qbytearray.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qbytearrayalgorithms.h \
@@ -40,11 +46,16 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/qcontainerinfo.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qcontainertools_impl.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qcontiguouscache.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qcoreapplication.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qcoreapplication_platform.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qcoreevent.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qdarwinhelpers.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qdatastream.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qdatetime.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qdeadlinetimer.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qdebug.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qendian.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qeventloop.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qexceptionhandling.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qflags.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qfloat16.h \
@@ -74,6 +85,7 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/qmetatype.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qminmax.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qnamespace.h \
+  F:/Qt/6.10.0/mingw_64/include/QtCore/qnativeinterface.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qnumeric.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qobject.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qobject_impl.h \
@@ -139,17 +151,25 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtCore/qversiontagging.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qxptype_traits.h \
   F:/Qt/6.10.0/mingw_64/include/QtCore/qyieldcpu.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/QKeyEvent \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/QTransform \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qaction.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qbitmap.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qbrush.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qcolor.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qcursor.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qevent.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qeventpoint.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qfont.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qfontinfo.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qfontmetrics.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qfontvariableaxis.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qguiapplication.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qguiapplication_platform.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qicon.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qimage.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qinputdevice.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qinputmethod.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qkeysequence.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpaintdevice.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpalette.h \
@@ -157,10 +177,13 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpicture.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpixelformat.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpixmap.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qpointingdevice.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qpolygon.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qregion.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qrgb.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qrgba64.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qscreen.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qscreen_platform.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtextcursor.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtextdocument.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtextformat.h \
@@ -170,14 +193,14 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtguiglobal.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qtransform.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qvalidator.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qvector2d.h \
+  F:/Qt/6.10.0/mingw_64/include/QtGui/qvectornd.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs.h \
   F:/Qt/6.10.0/mingw_64/include/QtGui/qwindowdefs_win.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QComboBox \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QInputDialog \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLabel \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QLineEdit \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMainWindow \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/QMenu \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QPushButton \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/QTableWidget \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractbutton.h \
@@ -187,13 +210,10 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractslider.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qabstractspinbox.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qcombobox.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qdialog.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qframe.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qinputdialog.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlabel.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qlineedit.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmainwindow.h \
-  F:/Qt/6.10.0/mingw_64/include/QtWidgets/qmenu.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qpushbutton.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qrubberband.h \
   F:/Qt/6.10.0/mingw_64/include/QtWidgets/qsizepolicy.h \
@@ -423,6 +443,8 @@ F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/EWIE
   F:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include/wchar.h \
   F:/Warehouse1/administrator.h \
   F:/Warehouse1/customlist.h \
+  F:/Warehouse1/deletionhistory.h \
+  F:/Warehouse1/deletionrecord.h \
   F:/Warehouse1/employee.h \
   F:/Warehouse1/operation.h \
   F:/Warehouse1/product.h \

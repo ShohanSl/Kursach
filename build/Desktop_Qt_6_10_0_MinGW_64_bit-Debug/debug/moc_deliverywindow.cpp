@@ -40,27 +40,21 @@ template <> constexpr inline auto DeliveryWindow::qt_create_metaobjectdata<qt_me
     namespace QMC = QtMocConstants;
     QtMocHelpers::StringRefStorage qt_stringData {
         "DeliveryWindow",
-        "onAddProductClicked",
-        "",
-        "onRemoveProductClicked",
         "onCompleteDeliveryClicked",
+        "",
         "onBackClicked",
         "onProductTypeChanged",
         "index"
     };
 
     QtMocHelpers::UintData qt_methods {
-        // Slot 'onAddProductClicked'
-        QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onRemoveProductClicked'
-        QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onCompleteDeliveryClicked'
-        QtMocHelpers::SlotData<void()>(4, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onBackClicked'
-        QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onProductTypeChanged'
-        QtMocHelpers::SlotData<void(int)>(6, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 7 },
+        QtMocHelpers::SlotData<void(int)>(4, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 5 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
@@ -85,11 +79,9 @@ void DeliveryWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
     auto *_t = static_cast<DeliveryWindow *>(_o);
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: _t->onAddProductClicked(); break;
-        case 1: _t->onRemoveProductClicked(); break;
-        case 2: _t->onCompleteDeliveryClicked(); break;
-        case 3: _t->onBackClicked(); break;
-        case 4: _t->onProductTypeChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
+        case 0: _t->onCompleteDeliveryClicked(); break;
+        case 1: _t->onBackClicked(); break;
+        case 2: _t->onProductTypeChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
         default: ;
         }
     }
@@ -114,14 +106,14 @@ int DeliveryWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 5)
+        if (_id < 3)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 5;
+        _id -= 3;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 5)
+        if (_id < 3)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 5;
+        _id -= 3;
     }
     return _id;
 }

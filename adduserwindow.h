@@ -6,9 +6,6 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QLabel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QMessageBox>
 #include "usermanager.h"
 
 class AddUserWindow : public QMainWindow
@@ -24,17 +21,13 @@ private slots:
 
 private:
     void setupUI();
-    void applyStyle();
 
     UserManager *m_userManager;
 
-    QWidget *centralWidget;
     QLineEdit *lastNameEdit;
     QLineEdit *firstNameEdit;
     QLineEdit *middleNameEdit;
     QComboBox *roleCombo;
-    QPushButton *addButton;
-    QPushButton *backButton;
 };
 
 #endif // ADDUSERWINDOW_H

@@ -1,145 +1,114 @@
 #include "warehousewindow.h"
-#include "mainwindow.h"
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QGroupBox>
 #include "sectionwindow.h"
-#include <QMessageBox>
+#include "mainwindow.h"
 
-WarehouseWindow::WarehouseWindow(bool isAdmin, const QString& mode, UserManager* userManager, QWidget *parent)
+WarehouseWindow::WarehouseWindow(bool isAdmin, const QString& mode,
+                                 UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_isAdmin(isAdmin), m_mode(mode), m_userManager(userManager)
 {
     setupUI();
-    applyStyle();
-
-    if (m_mode == "shipment") {
-        setWindowTitle("Складской учет - Оформление отгрузки");
-    } else if (m_mode == "transfer") {
-        setWindowTitle("Складской учет - Трансфер товаров");
-    } else {
-        setWindowTitle("Складской учет - Склад");
-    }
-
-    setFixedSize(800, 600);
+    setWindowTitle("Склад");
+    setFixedSize(500, 500);
 }
 
 void WarehouseWindow::setupUI()
 {
-    centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
+    QWidget *central = new QWidget(this);
+    setCentralWidget(central);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setSpacing(20);
-    mainLayout->setContentsMargins(30, 20, 30, 20);
+    QVBoxLayout *mainLayout = new QVBoxLayout(central);
+    mainLayout->setSpacing(10);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
 
-    QWidget *topPanel = new QWidget();
-    QHBoxLayout *topLayout = new QHBoxLayout(topPanel);
-    topLayout->setContentsMargins(0, 0, 0, 0);
+    // Заголовок
+    QString titleText;
+    if (m_mode == "shipment")
+        titleText = "ОТГРУЗКА - Выберите секцию";
+    else if (m_mode == "transfer")
+        titleText = "ТРАНСФЕР - Выберите исходную секцию";
+    else
+        titleText = "СКЛАД - Выберите секцию";
 
-    backButton = new QPushButton("← Назад");
-    backButton->setFixedSize(100, 35);
-
-    if (m_mode == "shipment") {
-        titleLabel = new QLabel("ОФОРМЛЕНИЕ ОТГРУЗКИ - ВЫБОР СЕКЦИИ");
-    } else if (m_mode == "transfer") {
-        titleLabel = new QLabel("ТРАНСФЕР ТОВАРОВ - ВЫБОР СЕКЦИИ");
-    } else {
-        titleLabel = new QLabel("СКЛАД - СЕКЦИИ");
-    }
+    QLabel *titleLabel = new QLabel(titleText);
     titleLabel->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(titleLabel);
 
-    topLayout->addWidget(backButton);
-    topLayout->addStretch();
-    topLayout->addWidget(titleLabel);
-    topLayout->addStretch();
+    // Кнопка "Назад"
+    backButton = new QPushButton("← Назад");
+    mainLayout->addWidget(backButton);
 
-    QWidget *sectionsWidget = new QWidget();
-    QGridLayout *gridLayout = new QGridLayout(sectionsWidget);
-    gridLayout->setSpacing(15);
-    gridLayout->setContentsMargins(0, 0, 0, 0);
-
-    QString materials[12] = {
-        "Дерево", "Дерево", "Дерево",
-        "Металл", "Металл", "Металл",
-        "Камень", "Камень", "Камень",
-        "Пластмасса", "Пластмасса", "Пластмасса"
-    };
-
-    for (int i = 0; i < 12; i++) {
-        int sectionNumber = i + 1;
-        QString buttonText = QString("Секция №%1\n%2").arg(sectionNumber).arg(materials[i]);
-
-        sectionButtons[i] = new QPushButton(buttonText);
-        sectionButtons[i]->setMinimumSize(200, 80);
-        sectionButtons[i]->setProperty("sectionNumber", sectionNumber);
-
-        int row = i / 3;
-        int col = i % 3;
-        gridLayout->addWidget(sectionButtons[i], row, col);
-
-        connect(sectionButtons[i], &QPushButton::clicked, this, [this, sectionNumber]() {
-            onSectionClicked(sectionNumber);
-        });
+    // Группа секций "Дерево"
+    QGroupBox *woodGroup = new QGroupBox("Дерево");
+    QGridLayout *woodLayout = new QGridLayout(woodGroup);
+    for (int i = 0; i < 3; i++) {
+        int sectionNum = i + 1;
+        sectionButtons[i] = new QPushButton("Секция " + QString::number(sectionNum));
+        woodLayout->addWidget(sectionButtons[i], 0, i);
+        connect(sectionButtons[i], &QPushButton::clicked,
+                [this, sectionNum]() { onSectionClicked(sectionNum); });
     }
+    mainLayout->addWidget(woodGroup);
 
-    mainLayout->addWidget(topPanel);
-    mainLayout->addWidget(sectionsWidget);
+    // Группа секций "Металл"
+    QGroupBox *metalGroup = new QGroupBox("Металл");
+    QGridLayout *metalLayout = new QGridLayout(metalGroup);
+    for (int i = 0; i < 3; i++) {
+        int sectionNum = i + 4;
+        sectionButtons[i+3] = new QPushButton("Секция " + QString::number(sectionNum));
+        metalLayout->addWidget(sectionButtons[i+3], 0, i);
+        connect(sectionButtons[i+3], &QPushButton::clicked,
+                [this, sectionNum]() { onSectionClicked(sectionNum); });
+    }
+    mainLayout->addWidget(metalGroup);
+
+    // Группа секций "Камень"
+    QGroupBox *stoneGroup = new QGroupBox("Камень");
+    QGridLayout *stoneLayout = new QGridLayout(stoneGroup);
+    for (int i = 0; i < 3; i++) {
+        int sectionNum = i + 7;
+        sectionButtons[i+6] = new QPushButton("Секция " + QString::number(sectionNum));
+        stoneLayout->addWidget(sectionButtons[i+6], 0, i);
+        connect(sectionButtons[i+6], &QPushButton::clicked,
+                [this, sectionNum]() { onSectionClicked(sectionNum); });
+    }
+    mainLayout->addWidget(stoneGroup);
+
+    // Группа секций "Пластмасса"
+    QGroupBox *plasticGroup = new QGroupBox("Пластмасса");
+    QGridLayout *plasticLayout = new QGridLayout(plasticGroup);
+    for (int i = 0; i < 3; i++) {
+        int sectionNum = i + 10;
+        sectionButtons[i+9] = new QPushButton("Секция " + QString::number(sectionNum));
+        plasticLayout->addWidget(sectionButtons[i+9], 0, i);
+        connect(sectionButtons[i+9], &QPushButton::clicked,
+                [this, sectionNum]() { onSectionClicked(sectionNum); });
+    }
+    mainLayout->addWidget(plasticGroup);
+
     mainLayout->addStretch();
 
     connect(backButton, &QPushButton::clicked, this, &WarehouseWindow::onBackClicked);
 }
 
-void WarehouseWindow::applyStyle()
-{
-    setStyleSheet(R"(
-        QMainWindow {
-            background-color: #f0f0f0;
-        }
-        QWidget {
-            background-color: #f0f0f0;
-        }
-        QLabel {
-            color: #2c3e50;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 10px;
-            margin: 5px;
-        }
-        QPushButton {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            margin: 0px;
-        }
-        QPushButton:hover {
-            background-color: #2980b9;
-        }
-        QPushButton:pressed {
-            background-color: #2471a3;
-        }
-        QPushButton#backButton {
-            background-color: #95a5a6;
-            font-size: 13px;
-            padding: 8px 15px;
-        }
-        QPushButton#backButton:hover {
-            background-color: #7f8c8d;
-        }
-    )");
-
-    backButton->setObjectName("backButton");
-}
-
 void WarehouseWindow::onSectionClicked(int sectionNumber)
 {
     QString materialType;
-    if (sectionNumber <= 3) materialType = "Дерево";
-    else if (sectionNumber <= 6) materialType = "Металл";
-    else if (sectionNumber <= 9) materialType = "Камень";
-    else materialType = "Пластмасса";
+    if (sectionNumber >= 1 && sectionNumber <= 3)
+        materialType = "Дерево";
+    else if (sectionNumber >= 4 && sectionNumber <= 6)
+        materialType = "Металл";
+    else if (sectionNumber >= 7 && sectionNumber <= 9)
+        materialType = "Камень";
+    else if (sectionNumber >= 10 && sectionNumber <= 12)
+        materialType = "Пластмасса";
+    else
+        materialType = "Неизвестно";
 
-    SectionWindow *sectionWindow = new SectionWindow(sectionNumber, materialType, m_isAdmin, m_mode, m_userManager);
+    SectionWindow *sectionWindow = new SectionWindow(sectionNumber, materialType,
+                                                     m_isAdmin, m_mode, m_userManager);
     sectionWindow->show();
     this->close();
 }

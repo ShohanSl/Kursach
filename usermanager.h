@@ -25,7 +25,6 @@ public:
                               const QString& password);
 
     // Вспомогательные методы
-    void initializeTestData();
     bool isUserInPending(const QString& fullName);
     User* getPendingUser(const QString& fullName);
     UserRole getPendingUserRole(const QString& fullName);

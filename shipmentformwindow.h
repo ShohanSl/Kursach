@@ -2,12 +2,8 @@
 #define SHIPMENTFORMWINDOW_H
 
 #include <QMainWindow>
-#include <QWidget>
 #include <QLineEdit>
-#include <QComboBox>
 #include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QDateEdit>
 #include "product.h"
@@ -28,28 +24,16 @@ private slots:
 
 private:
     void setupUI();
-    void applyStyle();
-    void saveShipmentToFile();
+    void saveShipment();
 
     Product m_product;
     int m_sectionNumber;
     bool m_isAdmin;
+    UserManager* m_userManager;
 
-    QWidget *centralWidget;
-
-    QLineEdit *productNameEdit;
-    QLineEdit *productIndexEdit;
-    QLineEdit *supplierEdit;
-    QLineEdit *cellNumberEdit;
-    QLineEdit *availableQuantityEdit;
     QLineEdit *customerEdit;
     QLineEdit *shipmentQuantityEdit;
     QDateEdit *dateEdit;
-
-    QPushButton *completeButton;
-    QPushButton *backButton;
-
-    UserManager* m_userManager;
 };
 
 #endif // SHIPMENTFORMWINDOW_H
