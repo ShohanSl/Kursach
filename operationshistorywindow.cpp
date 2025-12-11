@@ -11,6 +11,9 @@
 #include <QMenu>
 #include <QAction>
 #include "sectionwindow.h"
+#include "fileexception.h"        // Добавляем
+#include "validationexception.h"  // Добавляем
+#include "inputvalidator.h"       // Добавляем
 
 OperationsHistoryWindow::OperationsHistoryWindow(int sectionNumber, const QString& materialType,
                                                  bool isAdmin, const QString& mode, UserManager* userManager, QWidget *parent)
@@ -23,8 +26,16 @@ OperationsHistoryWindow::OperationsHistoryWindow(int sectionNumber, const QStrin
     setWindowTitle(QString("История операций - Секция %1").arg(sectionNumber));
     setFixedSize(900, 600);
 
-    loadOperationsHistory();
-    updateTable();
+    try {
+        loadOperationsHistory();
+        updateTable();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка загрузки",
+                              QString("Не удалось загрузить историю операций:\n%1").arg(e.qmessage()));
+        // Возвращаемся к секции
+        onBackClicked();
+        return;
+    }
 
     if (m_isAdmin) {
         setupContextMenu();
@@ -86,71 +97,139 @@ void OperationsHistoryWindow::setupUI()
 
 void OperationsHistoryWindow::loadOperationsHistory()
 {
-    QDir().mkpath("operations_history");
+    try {
+        QDir().mkpath("operations_history");
 
-    m_operationsHistory.clear();
-    QFile file(m_historyFile);
-    if (file.open(QIODevice::ReadOnly)) {
+        m_operationsHistory.clear();
+
+        QFile file(m_historyFile);
+        if (!file.exists()) {
+            // Файл может не существовать при первом открытии истории - это нормально
+            return;
+        }
+
+        if (!file.open(QIODevice::ReadOnly)) {
+            throw FileException(QString("Не удалось открыть файл истории операций '%1' для чтения\nОшибка: %2")
+                                    .arg(m_historyFile, file.errorString()));
+        }
+
         QDataStream in(&file);
         quint32 size;
         in >> size;
+
+        if (in.status() != QDataStream::Ok) {
+            file.close();
+            throw FileException(QString("Ошибка чтения размера данных из файла истории операций '%1'")
+                                    .arg(m_historyFile));
+        }
+
         for (quint32 i = 0; i < size; ++i) {
             Operation operation;
             in >> operation;
+
+            if (in.status() != QDataStream::Ok) {
+                file.close();
+                throw FileException(QString("Ошибка чтения операции №%1 из файла истории")
+                                        .arg(i + 1));
+            }
+
+            // Валидация данных операции
+            if (operation.getQuantity() < 0) {
+                throw ValidationException(QString("Операция №%1 содержит некорректное количество: %2")
+                                              .arg(i + 1).arg(operation.getQuantity()));
+            }
+
+            if (!operation.getDate().isValid()) {
+                throw ValidationException(QString("Операция №%1 содержит некорректную дату")
+                                              .arg(i + 1));
+            }
+
             m_operationsHistory.append(operation);
         }
+
         file.close();
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
     }
 }
 
 void OperationsHistoryWindow::saveOperationsHistory()
 {
-    QFile file(m_historyFile);
-    if (file.open(QIODevice::WriteOnly)) {
+    try {
+        QFile file(m_historyFile);
+
+        if (!file.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл истории операций '%1' для записи\nОшибка: %2")
+                                    .arg(m_historyFile, file.errorString()));
+        }
+
         QDataStream out(&file);
         out << static_cast<quint32>(m_operationsHistory.size());
+
         for (const Operation& operation : m_operationsHistory) {
             out << operation;
+
+            if (out.status() != QDataStream::Ok) {
+                file.close();
+                throw FileException(QString("Ошибка записи операции '%1' в файл истории")
+                                        .arg(operation.getProductName()));
+            }
         }
+
         file.close();
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
     }
 }
 
 void OperationsHistoryWindow::updateTable()
 {
-    // Сортируем операции по дате (новые сверху)
-    std::sort(m_operationsHistory.begin(), m_operationsHistory.end(),
-              [](const Operation& a, const Operation& b) {
-                  return a.getDate() > b.getDate();
-              });
+    try {
+        // Сортируем операции по дате (новые сверху)
+        std::sort(m_operationsHistory.begin(), m_operationsHistory.end(),
+                  [](const Operation& a, const Operation& b) {
+                      return a.getDate() > b.getDate();
+                  });
 
-    operationsTable->setRowCount(m_operationsHistory.size());
+        operationsTable->setRowCount(m_operationsHistory.size());
 
-    for (int i = 0; i < m_operationsHistory.size(); ++i) {
-        const Operation& operation = m_operationsHistory.at(i);
+        for (int i = 0; i < m_operationsHistory.size(); ++i) {
+            const Operation& operation = m_operationsHistory.at(i);
 
-        QString dateString = operation.getDate().toString("dd.MM.yyyy");
-        QString operationType = operation.getTypeString();
-        QString fromLocation = operation.getFromLocation();
-        QString toLocation = operation.getToLocation();
+            QString dateString = operation.getDate().toString("dd.MM.yyyy");
+            QString operationType = operation.getTypeString();
+            QString fromLocation = operation.getFromLocation();
+            QString toLocation = operation.getToLocation();
 
-        QTableWidgetItem *dateItem = new QTableWidgetItem(dateString);
-        QTableWidgetItem *typeItem = new QTableWidgetItem(operationType);
-        QTableWidgetItem *fromItem = new QTableWidgetItem(fromLocation);
-        QTableWidgetItem *toItem = new QTableWidgetItem(toLocation);
+            QTableWidgetItem *dateItem = new QTableWidgetItem(dateString);
+            QTableWidgetItem *typeItem = new QTableWidgetItem(operationType);
+            QTableWidgetItem *fromItem = new QTableWidgetItem(fromLocation);
+            QTableWidgetItem *toItem = new QTableWidgetItem(toLocation);
 
-        operationsTable->setItem(i, 0, dateItem);
-        operationsTable->setItem(i, 1, typeItem);
-        operationsTable->setItem(i, 2, fromItem);
-        operationsTable->setItem(i, 3, toItem);
+            operationsTable->setItem(i, 0, dateItem);
+            operationsTable->setItem(i, 1, typeItem);
+            operationsTable->setItem(i, 2, fromItem);
+            operationsTable->setItem(i, 3, toItem);
+        }
+
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Ошибка обновления таблицы",
+                             QString("Произошла ошибка при обновлении таблицы:\n%1").arg(e.what()));
     }
 }
 
 void OperationsHistoryWindow::onBackClicked()
 {
-    SectionWindow *sectionWindow = new SectionWindow(m_sectionNumber, m_materialType, m_isAdmin, m_mode, m_userManager);
-    sectionWindow->show();
-    this->close();
+    try {
+        SectionWindow *sectionWindow = new SectionWindow(m_sectionNumber, m_materialType, m_isAdmin, m_mode, m_userManager);
+        sectionWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка",
+                              QString("Не удалось вернуться к секции:\n%1").arg(e.qmessage()));
+    }
 }
 
 void OperationsHistoryWindow::onCellDoubleClicked(int row, int column)
@@ -220,55 +299,80 @@ void OperationsHistoryWindow::onCellDoubleClicked(int row, int column)
     }
 
     if (ok && !newValue.isEmpty()) {
-        // Базовая валидация
-        if (newValue.trimmed().isEmpty()) {
-            QMessageBox::warning(this, "Ошибка", "Поле не может быть пустым");
-            return;
-        }
+        try {
+            // Валидация ввода
+            InputValidator::validateNotEmptyOrThrow(newValue, columnName);
 
-        if (column == 0) {
-            QDate date = QDate::fromString(newValue, "dd.MM.yyyy");
-            if (!date.isValid()) {
-                QMessageBox::warning(this, "Ошибка", "Неверный формат даты. Используйте: dd.MM.yyyy");
-                return;
+            if (column == 0) {
+                QDate date = QDate::fromString(newValue, "dd.MM.yyyy");
+                if (!date.isValid()) {
+                    throw ValidationException("Неверный формат даты. Используйте: дд.мм.гггг");
+                }
+                if (date > QDate::currentDate()) {
+                    throw ValidationException("Дата операции не может быть в будущем");
+                }
+            } else if (column == 1) {
+                QStringList validTypes = {"Поставка", "Отгрузка", "Перемещение"};
+                if (!validTypes.contains(newValue)) {
+                    throw ValidationException("Недопустимый тип операции. Допустимые значения: Поставка, Отгрузка, Перемещение");
+                }
             }
-        }
 
-        updateOperationData(row, column, newValue);
-        QMessageBox::information(this, "Успех", "Данные успешно обновлены!");
+            updateOperationData(row, column, newValue);
+            QMessageBox::information(this, "Успех", "Данные успешно обновлены!");
+
+        } catch (const ValidationException& e) {
+            QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+        } catch (const AppException& e) {
+            QMessageBox::critical(this, "Ошибка", e.qmessage());
+        }
     }
 }
 
 void OperationsHistoryWindow::updateOperationData(int row, int column, const QString& newValue)
 {
-    Operation& operation = m_operationsHistory[row];
+    try {
+        Operation& operation = m_operationsHistory[row];
 
-    switch(column) {
-    case 0: {
-        QDate newDate = QDate::fromString(newValue, "dd.MM.yyyy");
-        if (newDate.isValid()) {
-            operation.setDate(newDate);
+        switch(column) {
+        case 0: {
+            QDate newDate = QDate::fromString(newValue, "dd.MM.yyyy");
+            if (newDate.isValid()) {
+                operation.setDate(newDate);
+            }
+            break;
         }
-        break;
-    }
-    case 1: {
-        Operation::OperationType newType;
-        if (newValue == "Поставка") newType = Operation::DELIVERY;
-        else if (newValue == "Отгрузка") newType = Operation::SHIPMENT;
-        else newType = Operation::TRANSFER;
-        operation.setType(newType);
-        break;
-    }
-    case 2:
-        operation.setFromLocation(newValue);
-        break;
-    case 3:
-        operation.setToLocation(newValue);
-        break;
-    }
+        case 1: {
+            Operation::OperationType newType;
+            if (newValue == "Поставка") newType = Operation::DELIVERY;
+            else if (newValue == "Отгрузка") newType = Operation::SHIPMENT;
+            else newType = Operation::TRANSFER;
+            operation.setType(newType);
+            break;
+        }
+        case 2:
+            operation.setFromLocation(newValue);
+            break;
+        case 3:
+            operation.setToLocation(newValue);
+            break;
+        }
 
-    saveOperationsHistory();
-    updateTable();
+        saveOperationsHistory();
+        updateTable();
+
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка сохранения",
+                              QString("Не удалось сохранить изменения:\n%1").arg(e.qmessage()));
+        // Перезагружаем данные, чтобы откатить изменения
+        try {
+            loadOperationsHistory();
+            updateTable();
+        } catch (const AppException& reloadError) {
+            QMessageBox::critical(this, "Критическая ошибка",
+                                  "Не удалось восстановить данные после ошибки сохранения");
+        }
+    }
 }
 
 void OperationsHistoryWindow::setupContextMenu()
@@ -313,10 +417,27 @@ void OperationsHistoryWindow::onDeleteOperation()
         QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-        m_operationsHistory.removeAt(selectedRow);
-        saveOperationsHistory();
-        updateTable();
-        QMessageBox::information(this, "Успех", "Операция успешно удалена!");
+        try {
+            m_operationsHistory.removeAt(selectedRow);
+            saveOperationsHistory();
+            updateTable();
+            QMessageBox::information(this, "Успех", "Операция успешно удалена!");
+
+        } catch (const FileException& e) {
+            QMessageBox::critical(this, "Ошибка сохранения",
+                                  QString("Не удалось сохранить изменения после удаления:\n%1").arg(e.qmessage()));
+            // Восстанавливаем удаленную операцию в списке
+            // (не можем восстановить, т.к. она уже удалена, нужно перезагрузить)
+            try {
+                loadOperationsHistory();
+                updateTable();
+            } catch (const AppException& reloadError) {
+                QMessageBox::critical(this, "Критическая ошибка",
+                                      "Не удалось восстановить данные после ошибки удаления");
+            }
+        } catch (const AppException& e) {
+            QMessageBox::critical(this, "Ошибка", e.qmessage());
+        }
     }
 
     selectedRow = -1;

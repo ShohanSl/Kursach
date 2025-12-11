@@ -7,6 +7,8 @@
 #include <QAction>
 #include "mainwindow.h"
 #include "adduserwindow.h"
+#include "validationexception.h"  // Добавляем заголовок
+#include "appexception.h"         // Добавляем заголовок
 
 AccountManagementWindow::AccountManagementWindow(UserManager *userManager, QWidget *parent)
     : QMainWindow(parent), m_userManager(userManager), m_selectedRow(-1)
@@ -14,7 +16,17 @@ AccountManagementWindow::AccountManagementWindow(UserManager *userManager, QWidg
     setupUI();
     setWindowTitle("Управление аккаунтами");
     setFixedSize(900, 700);
-    updateTables();
+
+    try {
+        updateTables();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка загрузки данных",
+                              QString("Не удалось загрузить данные пользователей:\n%1").arg(e.qmessage()));
+        // При ошибке загрузки данных сразу закрываем окно
+        MainWindow *mainWindow = new MainWindow(true, m_userManager);
+        mainWindow->show();
+        this->close();
+    }
 }
 
 void AccountManagementWindow::setupUI()
@@ -190,54 +202,70 @@ void AccountManagementWindow::setupTable(QTableWidget *table, const QStringList 
 
 void AccountManagementWindow::loadEmployeesTable()
 {
-    m_employeesData = m_userManager->getEmployeesData();
-    employeesTable->setRowCount(0);
+    try {
+        m_employeesData = m_userManager->getEmployeesData();
+        employeesTable->setRowCount(0);
 
-    employeesTable->setRowCount(m_employeesData.size());
-    for (int i = 0; i < m_employeesData.size(); ++i) {
-        const QStringList &userData = m_employeesData.at(i);
-        for (int j = 0; j < userData.size(); ++j) {
-            QTableWidgetItem *item = new QTableWidgetItem(userData.at(j));
-            employeesTable->setItem(i, j, item);
+        employeesTable->setRowCount(m_employeesData.size());
+        for (int i = 0; i < m_employeesData.size(); ++i) {
+            const QStringList &userData = m_employeesData.at(i);
+            for (int j = 0; j < userData.size(); ++j) {
+                QTableWidgetItem *item = new QTableWidgetItem(userData.at(j));
+                employeesTable->setItem(i, j, item);
+            }
         }
+    } catch (const AppException& e) {
+        throw; // Пробрасываем исключение дальше
     }
 }
 
 void AccountManagementWindow::loadAdminsTable()
 {
-    m_adminsData = m_userManager->getAdminsData();
-    adminsTable->setRowCount(0);
+    try {
+        m_adminsData = m_userManager->getAdminsData();
+        adminsTable->setRowCount(0);
 
-    adminsTable->setRowCount(m_adminsData.size());
-    for (int i = 0; i < m_adminsData.size(); ++i) {
-        const QStringList &userData = m_adminsData.at(i);
-        for (int j = 0; j < userData.size(); ++j) {
-            QTableWidgetItem *item = new QTableWidgetItem(userData.at(j));
-            adminsTable->setItem(i, j, item);
+        adminsTable->setRowCount(m_adminsData.size());
+        for (int i = 0; i < m_adminsData.size(); ++i) {
+            const QStringList &userData = m_adminsData.at(i);
+            for (int j = 0; j < userData.size(); ++j) {
+                QTableWidgetItem *item = new QTableWidgetItem(userData.at(j));
+                adminsTable->setItem(i, j, item);
+            }
         }
+    } catch (const AppException& e) {
+        throw; // Пробрасываем исключение дальше
     }
 }
 
 void AccountManagementWindow::loadPendingUsersTable()
 {
-    m_pendingUsersData = m_userManager->getPendingUsersData();
-    pendingUsersTable->setRowCount(0);
+    try {
+        m_pendingUsersData = m_userManager->getPendingUsersData();
+        pendingUsersTable->setRowCount(0);
 
-    pendingUsersTable->setRowCount(m_pendingUsersData.size());
-    for (int i = 0; i < m_pendingUsersData.size(); ++i) {
-        const QStringList &userData = m_pendingUsersData.at(i);
-        for (int j = 0; j < userData.size(); ++j) {
-            QTableWidgetItem *item = new QTableWidgetItem(userData.at(j));
-            pendingUsersTable->setItem(i, j, item);
+        pendingUsersTable->setRowCount(m_pendingUsersData.size());
+        for (int i = 0; i < m_pendingUsersData.size(); ++i) {
+            const QStringList &userData = m_pendingUsersData.at(i);
+            for (int j = 0; j < userData.size(); ++j) {
+                QTableWidgetItem *item = new QTableWidgetItem(userData.at(j));
+                pendingUsersTable->setItem(i, j, item);
+            }
         }
+    } catch (const AppException& e) {
+        throw; // Пробрасываем исключение дальше
     }
 }
 
 void AccountManagementWindow::updateTables()
 {
-    loadEmployeesTable();
-    loadAdminsTable();
-    loadPendingUsersTable();
+    try {
+        loadEmployeesTable();
+        loadAdminsTable();
+        loadPendingUsersTable();
+    } catch (const AppException& e) {
+        throw ValidationException(QString("Ошибка при обновлении таблиц пользователей:\n%1").arg(e.qmessage()));
+    }
 }
 
 void AccountManagementWindow::filterTable(QTableWidget *table, const CustomList<QStringList> &allData,
@@ -307,116 +335,135 @@ void AccountManagementWindow::onBackClicked()
 
 void AccountManagementWindow::onSearchTextChanged(const QString& text)
 {
-    QLineEdit *senderEdit = qobject_cast<QLineEdit*>(sender());
+    try {
+        QLineEdit *senderEdit = qobject_cast<QLineEdit*>(sender());
 
-    if (senderEdit == employeesSearchEdit) {
-        filterTable(employeesTable, m_employeesData, text, employeesSearchCombo->currentIndex());
-    } else if (senderEdit == adminsSearchEdit) {
-        filterTable(adminsTable, m_adminsData, text, adminsSearchCombo->currentIndex());
-    } else if (senderEdit == pendingUsersSearchEdit) {
-        filterTable(pendingUsersTable, m_pendingUsersData, text, pendingUsersSearchCombo->currentIndex());
+        if (senderEdit == employeesSearchEdit) {
+            filterTable(employeesTable, m_employeesData, text, employeesSearchCombo->currentIndex());
+        } else if (senderEdit == adminsSearchEdit) {
+            filterTable(adminsTable, m_adminsData, text, adminsSearchCombo->currentIndex());
+        } else if (senderEdit == pendingUsersSearchEdit) {
+            filterTable(pendingUsersTable, m_pendingUsersData, text, pendingUsersSearchCombo->currentIndex());
+        }
+    } catch (const AppException& e) {
+        QMessageBox::warning(this, "Ошибка фильтрации",
+                             QString("Не удалось выполнить фильтрацию:\n%1").arg(e.qmessage()));
     }
 }
 
 void AccountManagementWindow::onSearchCriteriaChanged(int index)
 {
-    QComboBox *senderCombo = qobject_cast<QComboBox*>(sender());
+    try {
+        QComboBox *senderCombo = qobject_cast<QComboBox*>(sender());
 
-    if (senderCombo == employeesSearchCombo) {
-        filterTable(employeesTable, m_employeesData, employeesSearchEdit->text(), index);
-    } else if (senderCombo == adminsSearchCombo) {
-        filterTable(adminsTable, m_adminsData, adminsSearchEdit->text(), index);
-    } else if (senderCombo == pendingUsersSearchCombo) {
-        filterTable(pendingUsersTable, m_pendingUsersData, pendingUsersSearchEdit->text(), index);
+        if (senderCombo == employeesSearchCombo) {
+            filterTable(employeesTable, m_employeesData, employeesSearchEdit->text(), index);
+        } else if (senderCombo == adminsSearchCombo) {
+            filterTable(adminsTable, m_adminsData, adminsSearchEdit->text(), index);
+        } else if (senderCombo == pendingUsersSearchCombo) {
+            filterTable(pendingUsersTable, m_pendingUsersData, pendingUsersSearchEdit->text(), index);
+        }
+    } catch (const AppException& e) {
+        QMessageBox::warning(this, "Ошибка фильтрации",
+                             QString("Не удалось выполнить фильтрацию:\n%1").arg(e.qmessage()));
     }
 }
 
 void AccountManagementWindow::onDeleteUser()
 {
-    if (m_selectedRow < 0) {
-        QMessageBox::warning(this, "Предупреждение", "Не выбрана строка для удаления");
-        return;
-    }
+    try {
+        if (m_selectedRow < 0) {
+            throw ValidationException("Не выбрана строка для удаления");
+        }
 
-    QString userInfo;
-    bool success = false;
+        QString userInfo;
+        bool success = false;
 
-    if (m_selectedUserType == "employee") {
-        if (m_selectedRow >= m_employeesData.size()) {
-            QMessageBox::warning(this, "Ошибка", "Неверный номер строки");
+        if (m_selectedUserType == "employee") {
+            if (m_selectedRow >= m_employeesData.size()) {
+                throw ValidationException("Неверный номер строки");
+            }
+
+            const QStringList &userData = m_employeesData.at(m_selectedRow);
+            userInfo = QString("Сотрудник: %1 %2 %3\nЛогин: %4")
+                           .arg(userData.at(0))
+                           .arg(userData.at(1))
+                           .arg(userData.at(2))
+                           .arg(userData.at(3));
+
+        } else if (m_selectedUserType == "admin") {
+            if (m_selectedRow >= m_adminsData.size()) {
+                throw ValidationException("Неверный номер строки");
+            }
+
+            const QStringList &userData = m_adminsData.at(m_selectedRow);
+            userInfo = QString("Администратор: %1 %2 %3\nЛогин: %4")
+                           .arg(userData.at(0))
+                           .arg(userData.at(1))
+                           .arg(userData.at(2))
+                           .arg(userData.at(3));
+
+        } else if (m_selectedUserType == "pending") {
+            if (m_selectedRow >= m_pendingUsersData.size()) {
+                throw ValidationException("Неверный номер строки");
+            }
+
+            const QStringList &userData = m_pendingUsersData.at(m_selectedRow);
+            userInfo = QString("Ожидающий пользователь: %1 %2 %3\nРоль: %4")
+                           .arg(userData.at(0))
+                           .arg(userData.at(1))
+                           .arg(userData.at(2))
+                           .arg(userData.at(3));
+        }
+
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Подтверждение удаления",
+            QString("Вы уверены, что хотите удалить этого пользователя?\n\n%1").arg(userInfo),
+            QMessageBox::Yes | QMessageBox::No
+            );
+
+        if (reply == QMessageBox::No) {
+            m_selectedRow = -1;
+            m_selectedUserType = "";
             return;
         }
 
-        const QStringList &userData = m_employeesData.at(m_selectedRow);
-        userInfo = QString("Сотрудник: %1 %2 %3\nЛогин: %4")
-                       .arg(userData.at(0))
-                       .arg(userData.at(1))
-                       .arg(userData.at(2))
-                       .arg(userData.at(3));
-
-    } else if (m_selectedUserType == "admin") {
-        if (m_selectedRow >= m_adminsData.size()) {
-            QMessageBox::warning(this, "Ошибка", "Неверный номер строки");
-            return;
+        if (m_selectedUserType == "employee") {
+            const QStringList &userData = m_employeesData.at(m_selectedRow);
+            QString login = userData.at(3);
+            success = m_userManager->removeEmployeeByLogin(login);
+        } else if (m_selectedUserType == "admin") {
+            const QStringList &userData = m_adminsData.at(m_selectedRow);
+            QString login = userData.at(3);
+            success = m_userManager->removeAdminByLogin(login);
+        } else if (m_selectedUserType == "pending") {
+            const QStringList &userData = m_pendingUsersData.at(m_selectedRow);
+            QString fullName = userData.at(0) + " " + userData.at(1) + " " + userData.at(2);
+            success = m_userManager->removePendingUserByName(fullName);
         }
 
-        const QStringList &userData = m_adminsData.at(m_selectedRow);
-        userInfo = QString("Администратор: %1 %2 %3\nЛогин: %4")
-                       .arg(userData.at(0))
-                       .arg(userData.at(1))
-                       .arg(userData.at(2))
-                       .arg(userData.at(3));
-
-    } else if (m_selectedUserType == "pending") {
-        if (m_selectedRow >= m_pendingUsersData.size()) {
-            QMessageBox::warning(this, "Ошибка", "Неверный номер строки");
-            return;
+        if (success) {
+            try {
+                updateTables();
+            } catch (const AppException& e) {
+                QMessageBox::warning(this, "Ошибка обновления",
+                                     QString("Пользователь удален, но не удалось обновить таблицы:\n%1").arg(e.qmessage()));
+                return;
+            }
+            QMessageBox::information(this, "Успех", "Пользователь успешно удален!");
+        } else {
+            throw ValidationException("Не удалось удалить пользователя. Возможно, произошла ошибка при сохранении данных.");
         }
 
-        const QStringList &userData = m_pendingUsersData.at(m_selectedRow);
-        userInfo = QString("Ожидающий пользователь: %1 %2 %3\nРоль: %4")
-                       .arg(userData.at(0))
-                       .arg(userData.at(1))
-                       .arg(userData.at(2))
-                       .arg(userData.at(3));
-    }
-
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this,
-        "Подтверждение удаления",
-        QString("Вы уверены, что хотите удалить этого пользователя?\n\n%1").arg(userInfo),
-        QMessageBox::Yes | QMessageBox::No
-        );
-
-    if (reply == QMessageBox::No) {
         m_selectedRow = -1;
         m_selectedUserType = "";
-        return;
-    }
 
-    if (m_selectedUserType == "employee") {
-        const QStringList &userData = m_employeesData.at(m_selectedRow);
-        QString login = userData.at(3);
-        success = m_userManager->removeEmployeeByLogin(login);
-    } else if (m_selectedUserType == "admin") {
-        const QStringList &userData = m_adminsData.at(m_selectedRow);
-        QString login = userData.at(3);
-        success = m_userManager->removeAdminByLogin(login);
-    } else if (m_selectedUserType == "pending") {
-        const QStringList &userData = m_pendingUsersData.at(m_selectedRow);
-        QString fullName = userData.at(0) + " " + userData.at(1) + " " + userData.at(2);
-        success = m_userManager->removePendingUserByName(fullName);
+    } catch (const ValidationException& e) {
+        QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
     }
-
-    if (success) {
-        updateTables();
-        QMessageBox::information(this, "Успех", "Пользователь успешно удален!");
-    } else {
-        QMessageBox::warning(this, "Ошибка", "Не удалось удалить пользователя");
-    }
-
-    m_selectedRow = -1;
-    m_selectedUserType = "";
 }
 
 void AccountManagementWindow::onAddUserClicked()

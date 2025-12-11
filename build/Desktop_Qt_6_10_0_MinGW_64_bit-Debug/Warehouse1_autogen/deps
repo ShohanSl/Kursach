@@ -642,6 +642,8 @@ Warehouse1_autogen/timestamp: \
 	F:/Warehouse1/adduserwindow.h \
 	F:/Warehouse1/administrator.cpp \
 	F:/Warehouse1/administrator.h \
+	F:/Warehouse1/appexception.cpp \
+	F:/Warehouse1/appexception.h \
 	F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/.qtc/package-manager/auto-setup.cmake \
 	F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/.qtc/package-manager/maintenance_tool_provider.cmake \
 	F:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake \
@@ -657,6 +659,12 @@ Warehouse1_autogen/timestamp: \
 	F:/Warehouse1/deliverywindow.h \
 	F:/Warehouse1/employee.cpp \
 	F:/Warehouse1/employee.h \
+	F:/Warehouse1/fileexception.cpp \
+	F:/Warehouse1/fileexception.h \
+	F:/Warehouse1/filehandler.cpp \
+	F:/Warehouse1/filehandler.h \
+	F:/Warehouse1/inputvalidator.cpp \
+	F:/Warehouse1/inputvalidator.h \
 	F:/Warehouse1/loginwindow.cpp \
 	F:/Warehouse1/loginwindow.h \
 	F:/Warehouse1/main.cpp \
@@ -680,6 +688,8 @@ Warehouse1_autogen/timestamp: \
 	F:/Warehouse1/user.h \
 	F:/Warehouse1/usermanager.cpp \
 	F:/Warehouse1/usermanager.h \
+	F:/Warehouse1/validationexception.cpp \
+	F:/Warehouse1/validationexception.h \
 	F:/Warehouse1/warehousewindow.cpp \
 	F:/Warehouse1/warehousewindow.h \
 	F:/Qt/Tools/CMake_64/bin/cmake.exe

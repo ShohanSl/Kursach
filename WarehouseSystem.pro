@@ -6,6 +6,10 @@ TARGET = WarehouseSystem
 TEMPLATE = app
 
 SOURCES += \
+    appexception.cpp \
+    fileexception.cpp \
+    filehandler.cpp \
+    inputvalidator.cpp \
     main.cpp \
     loginwindow.cpp \
     registrationwindow.cpp \
@@ -14,6 +18,7 @@ SOURCES += \
     administrator.cpp \
     usermanager.cpp \
     mainwindow.cpp \
+    validationexception.cpp \
     warehousewindow.cpp \
     sectionwindow.cpp \
     product.cpp \
@@ -28,6 +33,10 @@ SOURCES += \
     deletionhistory.cpp
 
 HEADERS += \
+    appexception.h \
+    fileexception.h \
+    filehandler.h \
+    inputvalidator.h \
     loginwindow.h \
     registrationwindow.h \
     user.h \
@@ -35,6 +44,7 @@ HEADERS += \
     administrator.h \
     usermanager.h \
     mainwindow.h \
+    validationexception.h \
     warehousewindow.h \
     sectionwindow.h \
     product.h \

@@ -34,6 +34,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         customlist.h
         deletionrecord.h deletionrecord.cpp
         deletionhistory.h deletionhistory.cpp
+        appexception.cpp appexception.h fileexception.cpp fileexception.h filehandler.cpp filehandler.h inputvalidator.cpp inputvalidator.h validationexception.cpp validationexception.h
 
 
 

@@ -2,10 +2,14 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QApplication>
 #include "warehousewindow.h"
 #include "deliverywindow.h"
 #include "accountmanagementwindow.h"
 #include "loginwindow.h"
+#include "fileexception.h"        // Добавляем
+#include "appexception.h"         // Добавляем
+#include "validationexception.h"  // Добавляем
 
 MainWindow::MainWindow(bool isAdmin, UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_isAdmin(isAdmin), m_userManager(userManager)
@@ -73,30 +77,50 @@ void MainWindow::setupUI()
 
 void MainWindow::onWarehouseClicked()
 {
-    WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "view", m_userManager);
-    warehouseWindow->show();
-    this->close();
+    try {
+        WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "view", m_userManager);
+        warehouseWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия склада",
+                              QString("Не удалось открыть окно склада:\n%1").arg(e.qmessage()));
+    }
 }
 
 void MainWindow::onDeliveryClicked()
 {
-    DeliveryWindow *deliveryWindow = new DeliveryWindow(m_isAdmin, m_userManager);
-    deliveryWindow->show();
-    this->close();
+    try {
+        DeliveryWindow *deliveryWindow = new DeliveryWindow(m_isAdmin, m_userManager);
+        deliveryWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия поставки",
+                              QString("Не удалось открыть окно оформления поставки:\n%1").arg(e.qmessage()));
+    }
 }
 
 void MainWindow::onShipmentClicked()
 {
-    WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "shipment", m_userManager);
-    warehouseWindow->show();
-    this->close();
+    try {
+        WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "shipment", m_userManager);
+        warehouseWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия отгрузки",
+                              QString("Не удалось открыть окно отгрузки:\n%1").arg(e.qmessage()));
+    }
 }
 
 void MainWindow::onTransferClicked()
 {
-    WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "transfer", m_userManager);
-    warehouseWindow->show();
-    this->close();
+    try {
+        WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "transfer", m_userManager);
+        warehouseWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия трансфера",
+                              QString("Не удалось открыть окно трансфера:\n%1").arg(e.qmessage()));
+    }
 }
 
 void MainWindow::onManageAccountsClicked()
@@ -106,9 +130,14 @@ void MainWindow::onManageAccountsClicked()
         return;
     }
 
-    AccountManagementWindow *accountWindow = new AccountManagementWindow(m_userManager);
-    accountWindow->show();
-    this->close();
+    try {
+        AccountManagementWindow *accountWindow = new AccountManagementWindow(m_userManager);
+        accountWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия управления аккаунтами",
+                              QString("Не удалось открыть окно управления аккаунтами:\n%1").arg(e.qmessage()));
+    }
 }
 
 void MainWindow::onLogoutClicked()
@@ -121,8 +150,27 @@ void MainWindow::onLogoutClicked()
         );
 
     if (reply == QMessageBox::Yes) {
-        LoginWindow *loginWindow = new LoginWindow();
-        loginWindow->show();
-        this->close();
+        try {
+            LoginWindow *loginWindow = new LoginWindow();
+            loginWindow->show();
+            this->close();
+        } catch (const AppException& e) {
+            // Критическая ошибка при создании окна входа
+            QMessageBox::critical(this, "Критическая ошибка",
+                                  QString("Не удалось создать окно входа:\n%1\nПриложение будет закрыто.")
+                                      .arg(e.qmessage()));
+
+            // Закрываем приложение после закрытия окна с ошибкой
+            QMessageBox::StandardButton reply = QMessageBox::critical(
+                this,
+                "Закрытие приложения",
+                "Произошла критическая ошибка. Приложение будет закрыто.",
+                QMessageBox::Close
+                );
+
+            if (reply == QMessageBox::Close) {
+                qApp->quit(); // Закрываем приложение полностью
+            }
+        }
     }
 }

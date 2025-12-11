@@ -217,6 +217,46 @@ build CMakeFiles/Warehouse1.dir/deletionhistory.cpp.obj: CXX_COMPILER__Warehouse
   OBJECT_DIR = CMakeFiles\Warehouse1.dir
   OBJECT_FILE_DIR = CMakeFiles\Warehouse1.dir
 
+build CMakeFiles/Warehouse1.dir/appexception.cpp.obj: CXX_COMPILER__Warehouse1_unscanned_Debug F$:/Warehouse1/appexception.cpp || cmake_object_order_depends_target_Warehouse1
+  DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NEEDS_QMAIN -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  DEP_FILE = CMakeFiles\Warehouse1.dir\appexception.cpp.obj.d
+  FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IF:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/include -isystem F:/Qt/6.10.0/mingw_64/include/QtCore -isystem F:/Qt/6.10.0/mingw_64/include -isystem F:/Qt/6.10.0/mingw_64/mkspecs/win32-g++ -isystem F:/Qt/6.10.0/mingw_64/include/QtWidgets -isystem F:/Qt/6.10.0/mingw_64/include/QtGui
+  OBJECT_DIR = CMakeFiles\Warehouse1.dir
+  OBJECT_FILE_DIR = CMakeFiles\Warehouse1.dir
+
+build CMakeFiles/Warehouse1.dir/fileexception.cpp.obj: CXX_COMPILER__Warehouse1_unscanned_Debug F$:/Warehouse1/fileexception.cpp || cmake_object_order_depends_target_Warehouse1
+  DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NEEDS_QMAIN -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  DEP_FILE = CMakeFiles\Warehouse1.dir\fileexception.cpp.obj.d
+  FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IF:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/include -isystem F:/Qt/6.10.0/mingw_64/include/QtCore -isystem F:/Qt/6.10.0/mingw_64/include -isystem F:/Qt/6.10.0/mingw_64/mkspecs/win32-g++ -isystem F:/Qt/6.10.0/mingw_64/include/QtWidgets -isystem F:/Qt/6.10.0/mingw_64/include/QtGui
+  OBJECT_DIR = CMakeFiles\Warehouse1.dir
+  OBJECT_FILE_DIR = CMakeFiles\Warehouse1.dir
+
+build CMakeFiles/Warehouse1.dir/filehandler.cpp.obj: CXX_COMPILER__Warehouse1_unscanned_Debug F$:/Warehouse1/filehandler.cpp || cmake_object_order_depends_target_Warehouse1
+  DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NEEDS_QMAIN -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  DEP_FILE = CMakeFiles\Warehouse1.dir\filehandler.cpp.obj.d
+  FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IF:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/include -isystem F:/Qt/6.10.0/mingw_64/include/QtCore -isystem F:/Qt/6.10.0/mingw_64/include -isystem F:/Qt/6.10.0/mingw_64/mkspecs/win32-g++ -isystem F:/Qt/6.10.0/mingw_64/include/QtWidgets -isystem F:/Qt/6.10.0/mingw_64/include/QtGui
+  OBJECT_DIR = CMakeFiles\Warehouse1.dir
+  OBJECT_FILE_DIR = CMakeFiles\Warehouse1.dir
+
+build CMakeFiles/Warehouse1.dir/inputvalidator.cpp.obj: CXX_COMPILER__Warehouse1_unscanned_Debug F$:/Warehouse1/inputvalidator.cpp || cmake_object_order_depends_target_Warehouse1
+  DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NEEDS_QMAIN -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  DEP_FILE = CMakeFiles\Warehouse1.dir\inputvalidator.cpp.obj.d
+  FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IF:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/include -isystem F:/Qt/6.10.0/mingw_64/include/QtCore -isystem F:/Qt/6.10.0/mingw_64/include -isystem F:/Qt/6.10.0/mingw_64/mkspecs/win32-g++ -isystem F:/Qt/6.10.0/mingw_64/include/QtWidgets -isystem F:/Qt/6.10.0/mingw_64/include/QtGui
+  OBJECT_DIR = CMakeFiles\Warehouse1.dir
+  OBJECT_FILE_DIR = CMakeFiles\Warehouse1.dir
+
+build CMakeFiles/Warehouse1.dir/validationexception.cpp.obj: CXX_COMPILER__Warehouse1_unscanned_Debug F$:/Warehouse1/validationexception.cpp || cmake_object_order_depends_target_Warehouse1
+  DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NEEDS_QMAIN -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  DEP_FILE = CMakeFiles\Warehouse1.dir\validationexception.cpp.obj.d
+  FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always
+  INCLUDES = -IF:/Warehouse1/build/Desktop_Qt_6_10_0_MinGW_64_bit-Debug/Warehouse1_autogen/include -isystem F:/Qt/6.10.0/mingw_64/include/QtCore -isystem F:/Qt/6.10.0/mingw_64/include -isystem F:/Qt/6.10.0/mingw_64/mkspecs/win32-g++ -isystem F:/Qt/6.10.0/mingw_64/include/QtWidgets -isystem F:/Qt/6.10.0/mingw_64/include/QtGui
+  OBJECT_DIR = CMakeFiles\Warehouse1.dir
+  OBJECT_FILE_DIR = CMakeFiles\Warehouse1.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Warehouse1
@@ -225,7 +265,7 @@ build CMakeFiles/Warehouse1.dir/deletionhistory.cpp.obj: CXX_COMPILER__Warehouse
 #############################################
 # Link the executable Warehouse1.exe
 
-build Warehouse1.exe: CXX_EXECUTABLE_LINKER__Warehouse1_Debug CMakeFiles/Warehouse1.dir/Warehouse1_autogen/mocs_compilation.cpp.obj CMakeFiles/Warehouse1.dir/main.cpp.obj CMakeFiles/Warehouse1.dir/mainwindow.cpp.obj CMakeFiles/Warehouse1.dir/loginwindow.cpp.obj CMakeFiles/Warehouse1.dir/operation.cpp.obj CMakeFiles/Warehouse1.dir/product.cpp.obj CMakeFiles/Warehouse1.dir/registrationwindow.cpp.obj CMakeFiles/Warehouse1.dir/sectionwindow.cpp.obj CMakeFiles/Warehouse1.dir/user.cpp.obj CMakeFiles/Warehouse1.dir/usermanager.cpp.obj CMakeFiles/Warehouse1.dir/warehousewindow.cpp.obj CMakeFiles/Warehouse1.dir/employee.cpp.obj CMakeFiles/Warehouse1.dir/administrator.cpp.obj CMakeFiles/Warehouse1.dir/operationshistorywindow.cpp.obj CMakeFiles/Warehouse1.dir/deliverywindow.cpp.obj CMakeFiles/Warehouse1.dir/shipmentformwindow.cpp.obj CMakeFiles/Warehouse1.dir/transferformwindow.cpp.obj CMakeFiles/Warehouse1.dir/accountmanagementwindow.cpp.obj CMakeFiles/Warehouse1.dir/adduserwindow.cpp.obj CMakeFiles/Warehouse1.dir/deletionrecord.cpp.obj CMakeFiles/Warehouse1.dir/deletionhistory.cpp.obj | F$:/Qt/6.10.0/mingw_64/lib/libQt6Widgets.a F$:/Qt/6.10.0/mingw_64/lib/libQt6Gui.a F$:/Qt/6.10.0/mingw_64/lib/libQt6Core.a F$:/Qt/6.10.0/mingw_64/lib/libQt6EntryPoint.a || Warehouse1_autogen Warehouse1_autogen_timestamp_deps
+build Warehouse1.exe: CXX_EXECUTABLE_LINKER__Warehouse1_Debug CMakeFiles/Warehouse1.dir/Warehouse1_autogen/mocs_compilation.cpp.obj CMakeFiles/Warehouse1.dir/main.cpp.obj CMakeFiles/Warehouse1.dir/mainwindow.cpp.obj CMakeFiles/Warehouse1.dir/loginwindow.cpp.obj CMakeFiles/Warehouse1.dir/operation.cpp.obj CMakeFiles/Warehouse1.dir/product.cpp.obj CMakeFiles/Warehouse1.dir/registrationwindow.cpp.obj CMakeFiles/Warehouse1.dir/sectionwindow.cpp.obj CMakeFiles/Warehouse1.dir/user.cpp.obj CMakeFiles/Warehouse1.dir/usermanager.cpp.obj CMakeFiles/Warehouse1.dir/warehousewindow.cpp.obj CMakeFiles/Warehouse1.dir/employee.cpp.obj CMakeFiles/Warehouse1.dir/administrator.cpp.obj CMakeFiles/Warehouse1.dir/operationshistorywindow.cpp.obj CMakeFiles/Warehouse1.dir/deliverywindow.cpp.obj CMakeFiles/Warehouse1.dir/shipmentformwindow.cpp.obj CMakeFiles/Warehouse1.dir/transferformwindow.cpp.obj CMakeFiles/Warehouse1.dir/accountmanagementwindow.cpp.obj CMakeFiles/Warehouse1.dir/adduserwindow.cpp.obj CMakeFiles/Warehouse1.dir/deletionrecord.cpp.obj CMakeFiles/Warehouse1.dir/deletionhistory.cpp.obj CMakeFiles/Warehouse1.dir/appexception.cpp.obj CMakeFiles/Warehouse1.dir/fileexception.cpp.obj CMakeFiles/Warehouse1.dir/filehandler.cpp.obj CMakeFiles/Warehouse1.dir/inputvalidator.cpp.obj CMakeFiles/Warehouse1.dir/validationexception.cpp.obj | F$:/Qt/6.10.0/mingw_64/lib/libQt6Widgets.a F$:/Qt/6.10.0/mingw_64/lib/libQt6Gui.a F$:/Qt/6.10.0/mingw_64/lib/libQt6Core.a F$:/Qt/6.10.0/mingw_64/lib/libQt6EntryPoint.a || Warehouse1_autogen Warehouse1_autogen_timestamp_deps
   FLAGS = -DQT_QML_DEBUG -g
   LINK_FLAGS = -mwindows
   LINK_LIBRARIES = F:/Qt/6.10.0/mingw_64/lib/libQt6Widgets.a  F:/Qt/6.10.0/mingw_64/lib/libQt6Gui.a  F:/Qt/6.10.0/mingw_64/lib/libQt6Core.a  -lmpr  -luserenv  -lmingw32  F:/Qt/6.10.0/mingw_64/lib/libQt6EntryPoint.a  -lshell32  -ld3d11  -ldxgi  -ldxguid  -ld3d12  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32

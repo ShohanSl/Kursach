@@ -15,6 +15,10 @@
 #include "operationshistorywindow.h"
 #include "shipmentformwindow.h"
 #include "transferformwindow.h"
+#include "appexception.h"
+#include "fileexception.h"
+#include "validationexception.h"
+#include "inputvalidator.h"
 
 SectionWindow::SectionWindow(int sectionNumber, const QString& materialType,
                              bool isAdmin, const QString& mode, UserManager* userManager, QWidget *parent)
@@ -36,16 +40,30 @@ SectionWindow::SectionWindow(int sectionNumber, const QString& materialType,
 
     setFixedSize(1000, 600);
 
-    loadProducts();
-    updateTable();
+    try {
+        loadProducts();
+        updateTable();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка загрузки",
+                              QString("Не удалось загрузить данные секции:\n%1").arg(e.qmessage()));
+        onBackClicked();
+        return;
+    }
 
     if (m_isAdmin && m_mode == "view") {
         setupContextMenu();
     }
+
     // Инициализируем историю удалений
-    m_deletionHistory = DeletionHistory::instance();
-    // Загружаем историю из файла
-    m_deletionHistory->loadFromFile("deletion_history.bin");
+    try {
+        m_deletionHistory = DeletionHistory::instance();
+        m_deletionHistory->loadFromFile("deletion_history.bin");
+    } catch (const FileException& e) {
+        QMessageBox::warning(this, "Внимание",
+                             QString("Не удалось загрузить историю удалений:\n%1\nПродолжение работы возможно, но история будет недоступна.")
+                                 .arg(e.qmessage()));
+        m_deletionHistory = DeletionHistory::instance();
+    }
 }
 
 void SectionWindow::setupUI()
@@ -146,97 +164,200 @@ void SectionWindow::setupUI()
 
 void SectionWindow::loadProducts()
 {
-    QDir().mkpath("sections");
-    QDir().mkpath("operations_history");
+    try {
+        QDir().mkpath("sections");
+        QDir().mkpath("operations_history");
 
-    m_products.clear();
-    QFile file(m_productsFile);
-    if (file.open(QIODevice::ReadOnly)) {
+        m_products.clear();
+
+        QFile file(m_productsFile);
+        if (!file.exists()) {
+            // Файл может не существовать при первом запуске - это нормально
+            m_allProducts = m_products;
+            return;
+        }
+
+        if (!file.open(QIODevice::ReadOnly)) {
+            throw FileException(QString("Не удалось открыть файл товаров '%1' для чтения\nОшибка: %2")
+                                    .arg(m_productsFile, file.errorString()));
+        }
+
         QDataStream in(&file);
         quint32 size;
         in >> size;
+
+        if (in.status() != QDataStream::Ok) {
+            file.close();
+            throw FileException(QString("Ошибка чтения размера данных из файла '%1'")
+                                    .arg(m_productsFile));
+        }
+
         for (quint32 i = 0; i < size; ++i) {
             Product product;
             in >> product;
+
+            if (in.status() != QDataStream::Ok) {
+                file.close();
+                throw FileException(QString("Ошибка чтения товара №%1 из файла '%2'")
+                                        .arg(i + 1).arg(m_productsFile));
+            }
+
+            // Валидация данных товара
+            if (product.getCellNumber() < 1 || product.getCellNumber() > MAX_CELLS) {
+                throw ValidationException(QString("Товар '%1' имеет недопустимый номер ячейки: %2")
+                                              .arg(product.getName())
+                                              .arg(product.getCellNumber()));
+            }
+
             m_products.append(product);
         }
-        file.close();
-    }
-    // Убрана инициализация тестовыми данными
 
-    m_allProducts = m_products;
+        file.close();
+        m_allProducts = m_products;
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
+    }
 }
 
 void SectionWindow::saveProducts()
 {
-    QFile file(m_productsFile);
-    if (file.open(QIODevice::WriteOnly)) {
+    try {
+        QFile file(m_productsFile);
+
+        if (!file.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл товаров '%1' для записи\nОшибка: %2")
+                                    .arg(m_productsFile, file.errorString()));
+        }
+
         QDataStream out(&file);
         out << static_cast<quint32>(m_products.size());
+
         for (const Product& product : m_products) {
             out << product;
+
+            if (out.status() != QDataStream::Ok) {
+                file.close();
+                throw FileException(QString("Ошибка записи товара '%1' в файл")
+                                        .arg(product.getName()));
+            }
         }
+
         file.close();
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
     }
 }
 
 void SectionWindow::loadOperationsHistory()
 {
-    QFile file(m_historyFile);
-    if (file.open(QIODevice::ReadOnly)) {
+    try {
+        QFile file(m_historyFile);
+
+        if (!file.exists()) {
+            // Файл может не существовать - это нормально
+            return;
+        }
+
+        if (!file.open(QIODevice::ReadOnly)) {
+            throw FileException(QString("Не удалось открыть файл истории операций '%1' для чтения\nОшибка: %2")
+                                    .arg(m_historyFile, file.errorString()));
+        }
+
         QDataStream in(&file);
         quint32 size;
         in >> size;
+
+        if (in.status() != QDataStream::Ok) {
+            file.close();
+            throw FileException("Ошибка чтения размера истории операций");
+        }
+
+        m_operationsHistory.clear();
         for (quint32 i = 0; i < size; ++i) {
             Operation operation;
             in >> operation;
+
+            if (in.status() != QDataStream::Ok) {
+                file.close();
+                throw FileException(QString("Ошибка чтения операции №%1 из файла истории")
+                                        .arg(i + 1));
+            }
+
             m_operationsHistory.append(operation);
         }
+
         file.close();
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
     }
 }
 
 void SectionWindow::saveOperationsHistory()
 {
-    QFile file(m_historyFile);
-    if (file.open(QIODevice::WriteOnly)) {
+    try {
+        QFile file(m_historyFile);
+
+        if (!file.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл истории операций '%1' для записи\nОшибка: %2")
+                                    .arg(m_historyFile, file.errorString()));
+        }
+
         QDataStream out(&file);
         out << static_cast<quint32>(m_operationsHistory.size());
+
         for (const Operation& operation : m_operationsHistory) {
             out << operation;
+
+            if (out.status() != QDataStream::Ok) {
+                file.close();
+                throw FileException("Ошибка записи операции в историю");
+            }
         }
+
         file.close();
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
     }
 }
 
 void SectionWindow::updateTable()
 {
-    productsTable->setSortingEnabled(false);
-    productsTable->setRowCount(m_products.size());
+    try {
+        productsTable->setSortingEnabled(false);
+        productsTable->setRowCount(m_products.size());
 
-    for (int i = 0; i < m_products.size(); ++i) {
-        const Product& product = m_products.at(i);
+        for (int i = 0; i < m_products.size(); ++i) {
+            const Product& product = m_products.at(i);
 
-        QTableWidgetItem *cellItem = new QTableWidgetItem();
-        cellItem->setData(Qt::DisplayRole, product.getCellNumber());
+            QTableWidgetItem *cellItem = new QTableWidgetItem();
+            cellItem->setData(Qt::DisplayRole, product.getCellNumber());
 
-        QTableWidgetItem *nameItem = new QTableWidgetItem(product.getName());
-        QTableWidgetItem *indexItem = new QTableWidgetItem(product.getIndex());
+            QTableWidgetItem *nameItem = new QTableWidgetItem(product.getName());
+            QTableWidgetItem *indexItem = new QTableWidgetItem(product.getIndex());
 
-        QTableWidgetItem *quantityItem = new QTableWidgetItem();
-        quantityItem->setData(Qt::DisplayRole, product.getQuantity());
+            QTableWidgetItem *quantityItem = new QTableWidgetItem();
+            quantityItem->setData(Qt::DisplayRole, product.getQuantity());
 
-        QTableWidgetItem *supplierItem = new QTableWidgetItem(product.getSupplier());
+            QTableWidgetItem *supplierItem = new QTableWidgetItem(product.getSupplier());
 
-        productsTable->setItem(i, 0, cellItem);
-        productsTable->setItem(i, 1, nameItem);
-        productsTable->setItem(i, 2, indexItem);
-        productsTable->setItem(i, 3, quantityItem);
-        productsTable->setItem(i, 4, supplierItem);
+            productsTable->setItem(i, 0, cellItem);
+            productsTable->setItem(i, 1, nameItem);
+            productsTable->setItem(i, 2, indexItem);
+            productsTable->setItem(i, 3, quantityItem);
+            productsTable->setItem(i, 4, supplierItem);
+        }
+
+        productsTable->setSortingEnabled(true);
+        productsTable->sortByColumn(0, Qt::AscendingOrder);
+
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Ошибка обновления таблицы",
+                             QString("Произошла ошибка при обновлении таблицы:\n%1").arg(e.what()));
     }
-
-    productsTable->setSortingEnabled(true);
-    productsTable->sortByColumn(0, Qt::AscendingOrder);
 }
 
 void SectionWindow::onBackClicked()
@@ -248,9 +369,14 @@ void SectionWindow::onBackClicked()
 
 void SectionWindow::onOperationsHistoryClicked()
 {
-    OperationsHistoryWindow *historyWindow = new OperationsHistoryWindow(m_sectionNumber, m_materialType, m_isAdmin, m_mode, m_userManager);
-    historyWindow->show();
-    this->close();
+    try {
+        OperationsHistoryWindow *historyWindow = new OperationsHistoryWindow(m_sectionNumber, m_materialType, m_isAdmin, m_mode, m_userManager);
+        historyWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка",
+                              QString("Не удалось открыть историю операций:\n%1").arg(e.qmessage()));
+    }
 }
 
 void SectionWindow::onSearchTextChanged(const QString& text)
@@ -339,54 +465,75 @@ void SectionWindow::onCellDoubleClicked(int row, int column)
     }
 
     if (ok && !newValue.isEmpty()) {
-        if (newValue.trimmed().isEmpty()) {
-            QMessageBox::warning(this, "Ошибка", "Поле не может быть пустым");
-            return;
-        }
+        try {
+            // Валидация ввода
+            InputValidator::validateNotEmptyOrThrow(newValue, columnName);
 
-        if (column == 3) {
-            bool conversionOk;
-            int quantity = newValue.toInt(&conversionOk);
-            if (!conversionOk || quantity < 0) {
-                QMessageBox::warning(this, "Ошибка", "Количество должно быть неотрицательным числом");
-                return;
+            if (column == 3) {
+                bool conversionOk;
+                int quantity = newValue.toInt(&conversionOk);
+                if (!conversionOk) {
+                    throw ValidationException("Количество должно быть числом");
+                }
+                if (quantity < 0) {
+                    throw ValidationException("Количество должно быть неотрицательным числом");
+                }
             }
-        }
 
-        updateProductData(dataIndex, column, newValue);
-        QMessageBox::information(this, "Успех", "Данные успешно обновлены!");
+            updateProductData(dataIndex, column, newValue);
+            QMessageBox::information(this, "Успех", "Данные успешно обновлены!");
+
+        } catch (const ValidationException& e) {
+            QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+        } catch (const AppException& e) {
+            QMessageBox::critical(this, "Ошибка", e.qmessage());
+        }
     }
 }
 
 void SectionWindow::updateProductData(int row, int column, const QString& newValue)
 {
-    Product& product = m_products[row];
+    try {
+        Product& product = m_products[row];
 
-    switch(column) {
-    case 1:
-        product.setName(newValue);
-        break;
-    case 2:
-        product.setIndex(newValue);
-        break;
-    case 3:
-        product.setQuantity(newValue.toInt());
-        break;
-    case 4:
-        product.setSupplier(newValue);
-        break;
-    }
-
-    // Обновляем также в m_allProducts
-    for (int i = 0; i < m_allProducts.size(); ++i) {
-        if (m_allProducts[i].getCellNumber() == product.getCellNumber()) {
-            m_allProducts[i] = product;
+        switch(column) {
+        case 1:
+            product.setName(newValue);
+            break;
+        case 2:
+            product.setIndex(newValue);
+            break;
+        case 3:
+            product.setQuantity(newValue.toInt());
+            break;
+        case 4:
+            product.setSupplier(newValue);
             break;
         }
-    }
 
-    saveProducts();
-    updateTable();
+        // Обновляем также в m_allProducts
+        for (int i = 0; i < m_allProducts.size(); ++i) {
+            if (m_allProducts[i].getCellNumber() == product.getCellNumber()) {
+                m_allProducts[i] = product;
+                break;
+            }
+        }
+
+        saveProducts();
+        updateTable();
+
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка сохранения",
+                              QString("Не удалось сохранить изменения:\n%1").arg(e.qmessage()));
+        // Перезагружаем данные, чтобы откатить изменения
+        try {
+            loadProducts();
+            updateTable();
+        } catch (const AppException& reloadError) {
+            QMessageBox::critical(this, "Критическая ошибка",
+                                  "Не удалось восстановить данные после ошибки сохранения");
+        }
+    }
 }
 
 void SectionWindow::setupContextMenu()
@@ -436,31 +583,39 @@ void SectionWindow::onDeleteProduct()
         );
 
     if (reply == QMessageBox::Yes) {
-        // СОХРАНЯЕМ ТОВАР В ИСТОРИЮ УДАЛЕНИЙ
-        m_deletionHistory->addDeletion(m_sectionNumber,
-                                       product.getCellNumber(),
-                                       product);
+        try {
+            // Сохраняем товар в историю удалений
+            m_deletionHistory->addDeletion(m_sectionNumber,
+                                           product.getCellNumber(),
+                                           product);
 
-        int cellNumber = m_products[dataIndex].getCellNumber();
-        m_products.removeAt(dataIndex);
+            int cellNumber = m_products[dataIndex].getCellNumber();
+            m_products.removeAt(dataIndex);
 
-        // Удаляем из m_allProducts по номеру ячейки
-        for (int i = 0; i < m_allProducts.size(); ++i) {
-            if (m_allProducts[i].getCellNumber() == cellNumber) {
-                m_allProducts.removeAt(i);
-                break;
+            // Удаляем из m_allProducts по номеру ячейки
+            for (int i = 0; i < m_allProducts.size(); ++i) {
+                if (m_allProducts[i].getCellNumber() == cellNumber) {
+                    m_allProducts.removeAt(i);
+                    break;
+                }
             }
-        }
 
-        saveProducts();
-        updateTable();
+            saveProducts();
+            updateTable();
 
-        // Показываем уведомление о возможности отмены
-        if (m_deletionHistory->canUndo()) {
-            QMessageBox::information(this, "Информация",
-                                     "Товар удален. Для отмены нажмите Ctrl+Z.\n"
-                                     "Доступно операций для отмены: " +
-                                         QString::number(m_deletionHistory->historySize()));
+            // Показываем уведомление о возможности отмены
+            if (m_deletionHistory->canUndo()) {
+                QMessageBox::information(this, "Информация",
+                                         "Товар удален. Для отмены нажмите Ctrl+Z.\n"
+                                         "Доступно операций для отмены: " +
+                                             QString::number(m_deletionHistory->historySize()));
+            }
+
+        } catch (const FileException& e) {
+            QMessageBox::critical(this, "Ошибка сохранения",
+                                  QString("Не удалось сохранить изменения после удаления:\n%1").arg(e.qmessage()));
+        } catch (const AppException& e) {
+            QMessageBox::critical(this, "Ошибка", e.qmessage());
         }
     }
 
@@ -518,7 +673,6 @@ int SectionWindow::getDataIndexFromVisualRow(int visualRow) const
 void SectionWindow::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Z && event->modifiers() == Qt::ControlModifier) {
-        // Пытаемся отменить последнее удаление
         undoLastDeletion();
     } else {
         QMainWindow::keyPressEvent(event);
@@ -528,55 +682,53 @@ void SectionWindow::keyPressEvent(QKeyEvent *event)
 // Новый метод для отмены удаления
 void SectionWindow::undoLastDeletion()
 {
-    if (!m_deletionHistory->canUndo()) {
-        QMessageBox::information(this, "Отмена", "Нет операций для отмены");
-        return;
-    }
-
-    int sectionNumber;
-    int cellNumber;
-    Product product;
-
-    if (m_deletionHistory->undoLastDeletion(sectionNumber, cellNumber, product)) {
-        // Проверяем, относится ли отменяемая операция к текущей секции
-        if (sectionNumber != m_sectionNumber) {
-            QMessageBox::warning(this, "Внимание",
-                                 QString("Отменяемая операция относится к секции %1.\n"
-                                         "Текущая секция: %2.\n"
-                                         "Перейдите в нужную секцию для восстановления.")
-                                     .arg(sectionNumber)
-                                     .arg(m_sectionNumber));
-
-            // Возвращаем запись в историю, так как отмена не удалась
-            m_deletionHistory->addDeletion(sectionNumber, cellNumber, product);
+    try {
+        if (!m_deletionHistory->canUndo()) {
+            QMessageBox::information(this, "Отмена", "Нет операций для отмены");
             return;
         }
 
-        // ✅ ИСПРАВЛЕНО: используем вызов метода вместо переменной
-        if (isCellOccupied(cellNumber)) {
-            QMessageBox::warning(this, "Ошибка",
-                                 QString("Ячейка %1 занята другим товаром.\n"
-                                         "Восстановление невозможно.")
-                                     .arg(cellNumber));
+        int sectionNumber;
+        int cellNumber;
+        Product product;
 
-            // Возвращаем запись в историю
-            m_deletionHistory->addDeletion(sectionNumber, cellNumber, product);
-            return;
+        if (m_deletionHistory->undoLastDeletion(sectionNumber, cellNumber, product)) {
+            if (sectionNumber != m_sectionNumber) {
+                QMessageBox::warning(this, "Внимание",
+                                     QString("Отменяемая операция относится к секции %1.\n"
+                                             "Текущая секция: %2.\n"
+                                             "Перейдите в нужную секцию для восстановления.")
+                                         .arg(sectionNumber)
+                                         .arg(m_sectionNumber));
+                return;
+            }
+
+            if (isCellOccupied(cellNumber)) {
+                QMessageBox::warning(this, "Ошибка",
+                                     QString("Ячейка %1 занята другим товаром.\n"
+                                             "Восстановление невозможно.")
+                                         .arg(cellNumber));
+                return;
+            }
+
+            // Восстанавливаем товар
+            m_products.append(product);
+            m_allProducts.append(product);
+            saveProducts();
+
+            filterTable(searchEdit->text(), searchComboBox->currentIndex());
+            updateTable();
+
+            QMessageBox::information(this, "Восстановление",
+                                     "Товар \"" + product.getName() +
+                                         "\" восстановлен в ячейке " + QString::number(cellNumber));
         }
 
-        // ✅ ИСПРАВЛЕНО: удаляем условие if(!cellOccupied) - оно уже проверено выше
-        // Восстанавливаем товар
-        m_products.append(product);
-        m_allProducts.append(product);
-        saveProducts();
-
-        // Применяем текущий фильтр
-        filterTable(searchEdit->text(), searchComboBox->currentIndex());
-        updateTable();
-
-        QMessageBox::information(this, "Восстановление",
-                                 "Товар \"" + product.getName() +
-                                     "\" восстановлен в ячейке " + QString::number(cellNumber));
+    } catch (const FileException& e) {
+        QMessageBox::warning(this, "Ошибка сохранения",
+                             QString("Не удалось сохранить историю удалений:\n%1").arg(e.qmessage()));
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
     }
 }
 

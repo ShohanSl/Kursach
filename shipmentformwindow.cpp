@@ -9,6 +9,9 @@
 #include <QIntValidator>
 #include "mainwindow.h"
 #include "warehousewindow.h"
+#include "fileexception.h"        // Добавляем
+#include "validationexception.h"  // Добавляем
+#include "inputvalidator.h"       // Добавляем
 
 ShipmentFormWindow::ShipmentFormWindow(const Product& product, int sectionNumber,
                                        bool isAdmin, UserManager* userManager, QWidget *parent)
@@ -95,133 +98,217 @@ void ShipmentFormWindow::setupUI()
 
 void ShipmentFormWindow::onCompleteShipmentClicked()
 {
-    if (customerEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Покупатель'");
-        return;
+    try {
+        QString customer = customerEdit->text().trimmed();
+        QString quantityText = shipmentQuantityEdit->text().trimmed();
+
+        // Проверка заполненности всех полей
+        QList<QPair<QString, QString>> requiredFields = {
+            {customer, "Покупатель"},
+            {quantityText, "Количество для отгрузки"}
+        };
+
+        InputValidator::validateAllFieldsNotEmptyOrThrow(requiredFields);
+
+        // Проверка числовых значений
+        bool ok;
+        int requestedQuantity = quantityText.toInt(&ok);
+        if (!ok) {
+            throw ValidationException("Количество должно быть числом");
+        }
+
+        if (requestedQuantity <= 0) {
+            throw ValidationException("Количество должно быть больше 0");
+        }
+
+        int availableQuantity = m_product.getQuantity();
+
+        if (requestedQuantity > availableQuantity) {
+            throw ValidationException(
+                QString("Запрошенное количество (%1) превышает доступное (%2)")
+                    .arg(requestedQuantity)
+                    .arg(availableQuantity));
+        }
+
+        // Валидация имени покупателя
+        InputValidator::validateOrThrow(customer, InputValidator::Mode::NonEmpty);
+
+        saveShipment();
+        QMessageBox::information(this, "Успех", "Отгрузка успешно оформлена!");
+
+        MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
+        mainWindow->show();
+        this->close();
+
+    } catch (const ValidationException& e) {
+        QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
     }
-
-    if (shipmentQuantityEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Количество для отгрузки'");
-        return;
-    }
-
-    int requestedQuantity = shipmentQuantityEdit->text().toInt();
-    int availableQuantity = m_product.getQuantity();
-
-    if (requestedQuantity <= 0) {
-        QMessageBox::warning(this, "Ошибка", "Количество должно быть больше 0");
-        return;
-    }
-
-    if (requestedQuantity > availableQuantity) {
-        QMessageBox::warning(this, "Ошибка",
-                             QString("Запрошенное количество (%1) превышает доступное (%2)")
-                                 .arg(requestedQuantity)
-                                 .arg(availableQuantity));
-        return;
-    }
-
-    saveShipment();
-    QMessageBox::information(this, "Успех", "Отгрузка успешно оформлена!");
-
-    MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
-    mainWindow->show();
-    this->close();
 }
 
 void ShipmentFormWindow::saveShipment()
 {
-    QString customer = customerEdit->text().trimmed();
-    int shipmentQuantity = shipmentQuantityEdit->text().toInt();
-    QDateTime shipmentDate = dateEdit->dateTime();
+    try {
+        QString customer = customerEdit->text().trimmed();
+        int shipmentQuantity = shipmentQuantityEdit->text().toInt();
+        QDateTime shipmentDate = dateEdit->dateTime();
 
-    // Создаем операцию отгрузки
-    Operation operation(m_product.getName(), m_product.getIndex(), shipmentQuantity,
-                        QString("Ячейка №%1").arg(m_product.getCellNumber()), customer,
-                        Operation::SHIPMENT, shipmentDate.date());
+        // Создаем операцию отгрузки
+        Operation operation(m_product.getName(), m_product.getIndex(), shipmentQuantity,
+                            QString("Ячейка №%1").arg(m_product.getCellNumber()), customer,
+                            Operation::SHIPMENT, shipmentDate.date());
 
-    // Сохраняем операцию в историю
-    QString historyFile = QString("operations_history/section_history_%1.bin").arg(m_sectionNumber);
-    QDir().mkpath("operations_history");
+        // Сохраняем операцию в историю
+        QString historyFile = QString("operations_history/section_history_%1.bin").arg(m_sectionNumber);
+        QDir().mkpath("operations_history");
 
-    QList<Operation> operations;
-    QFile hFile(historyFile);
-    if (hFile.open(QIODevice::ReadOnly)) {
-        QDataStream in(&hFile);
-        quint32 size;
-        in >> size;
-        for (quint32 i = 0; i < size; ++i) {
-            Operation op;
-            in >> op;
-            operations.append(op);
+        QList<Operation> operations;
+        QFile hFile(historyFile);
+        if (hFile.exists()) {
+            if (!hFile.open(QIODevice::ReadOnly)) {
+                throw FileException(QString("Не удалось открыть файл истории операций для чтения:\n%1")
+                                        .arg(hFile.errorString()));
+            }
+
+            QDataStream in(&hFile);
+            quint32 size;
+            in >> size;
+
+            if (in.status() != QDataStream::Ok) {
+                hFile.close();
+                throw FileException("Ошибка чтения размера истории операций");
+            }
+
+            for (quint32 i = 0; i < size; ++i) {
+                Operation op;
+                in >> op;
+
+                if (in.status() != QDataStream::Ok) {
+                    hFile.close();
+                    throw FileException(QString("Ошибка чтения операции №%1 из истории")
+                                            .arg(i + 1));
+                }
+
+                operations.append(op);
+            }
+            hFile.close();
         }
-        hFile.close();
-    }
 
-    operations.append(operation);
+        operations.append(operation);
 
-    if (hFile.open(QIODevice::WriteOnly)) {
+        if (!hFile.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл истории операций для записи:\n%1")
+                                    .arg(hFile.errorString()));
+        }
+
         QDataStream out(&hFile);
         out << static_cast<quint32>(operations.size());
+
         for (const Operation& op : operations) {
             out << op;
-        }
-        hFile.close();
-    }
 
-    // Обновляем товар в секции
-    QString productsFile = QString("sections/section_%1.bin").arg(m_sectionNumber);
-    QList<Product> products;
-    QFile pFile(productsFile);
-    if (pFile.open(QIODevice::ReadOnly)) {
+            if (out.status() != QDataStream::Ok) {
+                hFile.close();
+                throw FileException("Ошибка записи операции в историю");
+            }
+        }
+
+        hFile.close();
+
+        // Обновляем товар в секции
+        QString productsFile = QString("sections/section_%1.bin").arg(m_sectionNumber);
+        QList<Product> products;
+        QFile pFile(productsFile);
+        if (!pFile.exists()) {
+            throw FileException(QString("Файл товаров секции %1 не найден")
+                                    .arg(m_sectionNumber));
+        }
+
+        if (!pFile.open(QIODevice::ReadOnly)) {
+            throw FileException(QString("Не удалось открыть файл товаров для чтения:\n%1")
+                                    .arg(pFile.errorString()));
+        }
+
         QDataStream in(&pFile);
         quint32 size;
         in >> size;
+
+        if (in.status() != QDataStream::Ok) {
+            pFile.close();
+            throw FileException("Ошибка чтения размера списка товаров");
+        }
+
         for (quint32 i = 0; i < size; ++i) {
             Product prod;
             in >> prod;
+
+            if (in.status() != QDataStream::Ok) {
+                pFile.close();
+                throw FileException(QString("Ошибка чтения товара №%1")
+                                        .arg(i + 1));
+            }
+
             products.append(prod);
         }
         pFile.close();
-    }
 
-    // Находим и обновляем товар
-    bool productFound = false;
-    for (int i = 0; i < products.size(); ++i) {
-        if (products[i].getCellNumber() == m_product.getCellNumber() &&
-            products[i].getIndex() == m_product.getIndex()) {
+        // Находим и обновляем товар
+        bool productFound = false;
+        for (int i = 0; i < products.size(); ++i) {
+            if (products[i].getCellNumber() == m_product.getCellNumber() &&
+                products[i].getIndex() == m_product.getIndex()) {
 
-            int newQuantity = products[i].getQuantity() - shipmentQuantity;
+                int newQuantity = products[i].getQuantity() - shipmentQuantity;
 
-            if (newQuantity <= 0) {
-                products.removeAt(i);
-            } else {
-                products[i].setQuantity(newQuantity);
+                if (newQuantity <= 0) {
+                    products.removeAt(i);
+                } else {
+                    products[i].setQuantity(newQuantity);
+                }
+                productFound = true;
+                break;
             }
-            productFound = true;
-            break;
         }
-    }
 
-    if (!productFound) {
-        QMessageBox::warning(this, "Ошибка", "Товар не найден в базе данных");
-        return;
-    }
+        if (!productFound) {
+            throw ValidationException("Товар не найден в базе данных");
+        }
 
-    // Сохраняем обновленный список товаров
-    if (pFile.open(QIODevice::WriteOnly)) {
-        QDataStream out(&pFile);
-        out << static_cast<quint32>(products.size());
+        // Сохраняем обновленный список товаров
+        if (!pFile.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл товаров для записи:\n%1")
+                                    .arg(pFile.errorString()));
+        }
+
+        QDataStream out2(&pFile);
+        out2 << static_cast<quint32>(products.size());
+
         for (const Product& prod : products) {
-            out << prod;
+            out2 << prod;
+
+            if (out2.status() != QDataStream::Ok) {
+                pFile.close();
+                throw FileException(QString("Ошибка записи товара '%1'")
+                                        .arg(prod.getName()));
+            }
         }
+
         pFile.close();
+
+    } catch (const AppException& e) {
+        throw; // Пробрасываем дальше
     }
 }
 
 void ShipmentFormWindow::onBackClicked()
 {
-    WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "shipment", m_userManager);
-    warehouseWindow->show();
-    this->close();
+    try {
+        WarehouseWindow *warehouseWindow = new WarehouseWindow(m_isAdmin, "shipment", m_userManager);
+        warehouseWindow->show();
+        this->close();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка",
+                              QString("Не удалось вернуться к складу:\n%1").arg(e.qmessage()));
+    }
 }

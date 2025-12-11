@@ -7,6 +7,10 @@
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
+#include "validationexception.h"  // Добавляем
+#include "inputvalidator.h"       // Добавляем
+#include "appexception.h"         // Добавляем
+#include "fileexception.h"        // Добавляем
 
 LoginWindow::LoginWindow(QWidget *parent)
     : QMainWindow(parent), userManager(new UserManager())
@@ -50,26 +54,46 @@ void LoginWindow::setupUI()
 
 void LoginWindow::onLoginClicked()
 {
-    QString login = loginEdit->text().trimmed();
-    QString password = passwordEdit->text().trimmed();
+    try {
+        QString login = loginEdit->text().trimmed();
+        QString password = passwordEdit->text().trimmed();
 
-    if (login.isEmpty() || password.isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните все поля");
-        return;
-    }
+        // Проверка заполненности всех полей - одна ошибка для всех
+        QList<QPair<QString, QString>> fields = {
+            {login, "Логин"},
+            {password, "Пароль"}
+        };
 
-    User* user = userManager->authenticateUser(login, password);
-    if (user) {
-        MainWindow *mainWindow = new MainWindow(user->getRole() == UserRole::Administrator, userManager);
-        mainWindow->show();
-        this->close();
-    } else {
-        QMessageBox::critical(this, "Ошибка", "Неверный логин или пароль");
+        InputValidator::validateAllFieldsNotEmptyOrThrow(fields);
+
+        User* user = userManager->authenticateUser(login, password);
+        if (user) {
+            try {
+                MainWindow *mainWindow = new MainWindow(user->getRole() == UserRole::Administrator, userManager);
+                mainWindow->show();
+                this->close();
+            } catch (const AppException& e) {
+                QMessageBox::critical(this, "Ошибка создания главного окна",
+                                      QString("Не удалось создать главное меню:\n%1").arg(e.qmessage()));
+            }
+        } else {
+            throw ValidationException("Неверный логин или пароль");
+        }
+
+    } catch (const ValidationException& e) {
+        QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
     }
 }
 
 void LoginWindow::onRegisterClicked()
 {
-    RegistrationWindow regWindow(userManager, this);
-    regWindow.exec();
+    try {
+        RegistrationWindow regWindow(userManager, this);
+        regWindow.exec();
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия регистрации",
+                              QString("Не удалось открыть окно регистрации:\n%1").arg(e.qmessage()));
+    }
 }

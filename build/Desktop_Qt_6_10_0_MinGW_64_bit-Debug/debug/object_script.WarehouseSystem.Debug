@@ -1,3 +1,7 @@
+debug/appexception.o
+debug/fileexception.o
+debug/filehandler.o
+debug/inputvalidator.o
 debug/main.o
 debug/loginwindow.o
 debug/registrationwindow.o
@@ -6,6 +10,7 @@ debug/employee.o
 debug/administrator.o
 debug/usermanager.o
 debug/mainwindow.o
+debug/validationexception.o
 debug/warehousewindow.o
 debug/sectionwindow.o
 debug/product.o
@@ -18,6 +23,11 @@ debug/accountmanagementwindow.o
 debug/adduserwindow.o
 debug/deletionrecord.o
 debug/deletionhistory.o
+debug/appexception.o
+debug/fileexception.o
+debug/filehandler.o
+debug/inputvalidator.o
+debug/validationexception.o
 debug/moc_loginwindow.o
 debug/moc_registrationwindow.o
 debug/moc_mainwindow.o

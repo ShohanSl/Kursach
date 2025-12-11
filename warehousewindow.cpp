@@ -2,8 +2,11 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QMessageBox>
 #include "sectionwindow.h"
 #include "mainwindow.h"
+#include "fileexception.h"        // Добавляем
+#include "appexception.h"         // Добавляем
 
 WarehouseWindow::WarehouseWindow(bool isAdmin, const QString& mode,
                                  UserManager* userManager, QWidget *parent)
@@ -107,15 +110,43 @@ void WarehouseWindow::onSectionClicked(int sectionNumber)
     else
         materialType = "Неизвестно";
 
-    SectionWindow *sectionWindow = new SectionWindow(sectionNumber, materialType,
-                                                     m_isAdmin, m_mode, m_userManager);
-    sectionWindow->show();
-    this->close();
+    try {
+        SectionWindow *sectionWindow = new SectionWindow(sectionNumber, materialType,
+                                                         m_isAdmin, m_mode, m_userManager);
+        sectionWindow->show();
+        this->close();
+
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка открытия секции",
+                              QString("Не удалось открыть секцию %1:\n%2")
+                                  .arg(sectionNumber).arg(e.qmessage()));
+        // Остаемся в текущем окне склада
+    }
 }
 
 void WarehouseWindow::onBackClicked()
 {
-    MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
-    mainWindow->show();
-    this->close();
+    try {
+        MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
+        mainWindow->show();
+        this->close();
+
+    } catch (const AppException& e) {
+        // Критическая ошибка при создании главного окна
+        QMessageBox::critical(this, "Критическая ошибка",
+                              QString("Не удалось вернуться в главное меню:\n%1\nПриложение будет закрыто.")
+                                  .arg(e.qmessage()));
+
+        // Закрываем приложение после закрытия окна с ошибкой
+        QMessageBox::StandardButton reply = QMessageBox::critical(
+            this,
+            "Закрытие приложения",
+            "Произошла критическая ошибка. Приложение будет закрыто.",
+            QMessageBox::Close
+            );
+
+        if (reply == QMessageBox::Close) {
+            qApp->quit(); // Закрываем приложение полностью
+        }
+    }
 }

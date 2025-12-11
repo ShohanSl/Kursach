@@ -7,9 +7,13 @@
 #include <QFile>
 #include <QDataStream>
 #include <QIntValidator>
+#include <QApplication>
 #include "mainwindow.h"
 #include "operation.h"
 #include "product.h"
+#include "fileexception.h"        // Добавляем
+#include "validationexception.h"  // Добавляем
+#include "inputvalidator.h"       // Добавляем
 
 DeliveryWindow::DeliveryWindow(bool isAdmin, UserManager* userManager, QWidget *parent)
     : QMainWindow(parent), m_isAdmin(isAdmin), m_userManager(userManager)
@@ -144,188 +148,288 @@ void DeliveryWindow::updateSectionComboBox()
 
 void DeliveryWindow::onCompleteDeliveryClicked()
 {
-    // Валидация основных полей
-    if (supplierEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Поставщик'");
-        return;
-    }
+    try {
+        // Получаем значения полей
+        QString supplier = supplierEdit->text().trimmed();
+        QString productName = nameEdit->text().trimmed();
+        QString productIndex = indexEdit->text().trimmed();
+        QString quantityText = quantityEdit->text().trimmed();
+        QString cellText = cellEdit->text().trimmed();
 
-    if (nameEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Название товара'");
-        return;
-    }
+        // Проверка заполненности всех обязательных полей
+        QList<QPair<QString, QString>> requiredFields = {
+            {supplier, "Поставщик"},
+            {productName, "Название товара"},
+            {productIndex, "Индекс товара"},
+            {quantityText, "Количество"},
+            {cellText, "Ячейка размещения"}
+        };
 
-    if (indexEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Индекс товара'");
-        return;
-    }
+        InputValidator::validateAllFieldsNotEmptyOrThrow(requiredFields);
 
-    if (quantityEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Количество'");
-        return;
-    }
-
-    if (sectionCombo->currentIndex() == -1) {
-        QMessageBox::warning(this, "Ошибка", "Выберите секцию размещения");
-        return;
-    }
-
-    if (cellEdit->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Заполните поле 'Ячейка размещения'");
-        return;
-    }
-
-    // Проверка числовых полей
-    bool ok;
-    int quantity = quantityEdit->text().toInt(&ok);
-    if (!ok || quantity <= 0) {
-        QMessageBox::warning(this, "Ошибка", "Количество товара должно быть положительным числом");
-        return;
-    }
-
-    int cellNumber = cellEdit->text().toInt(&ok);
-    if (!ok || cellNumber < 1 || cellNumber > 60) {
-        QMessageBox::warning(this, "Ошибка", "Номер ячейки должен быть числом от 1 до 60");
-        return;
-    }
-
-    // Проверяем занятость ячейки
-    int sectionNumber = sectionCombo->currentData().toInt();
-    QString productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
-    QString supplier = supplierEdit->text().trimmed();
-    QString productName = nameEdit->text().trimmed();
-    QString productIndex = indexEdit->text().trimmed();
-
-    QFile pFile(productsFile);
-    if (pFile.exists() && pFile.open(QIODevice::ReadOnly)) {
-        QDataStream in(&pFile);
-        quint32 size;
-        in >> size;
-        for (quint32 i = 0; i < size; ++i) {
-            Product existingProduct;
-            in >> existingProduct;
-
-            if (existingProduct.getCellNumber() == cellNumber) {
-                // Ячейка занята - проверяем совпадение данных
-                if (existingProduct.getName() != productName ||
-                    existingProduct.getIndex() != productIndex ||
-                    existingProduct.getSupplier() != supplier) {
-                    // Данные не совпадают - конфликт
-                    QMessageBox::critical(this, "Ошибка",
-                                          QString("Ячейка %1 в секции %2 уже занята другим товаром.\n\n"
-                                                  "Измените ячейку размещения или данные товара.")
-                                              .arg(cellNumber).arg(sectionNumber));
-                    pFile.close();
-                    return;
-                }
-                break;
-            }
+        // Проверка, что выбрана секция
+        if (sectionCombo->currentIndex() == -1) {
+            throw ValidationException("Выберите секцию размещения");
         }
-        pFile.close();
-    }
 
-    // Сохраняем данные
-    saveDelivery();
+        // Проверка числовых значений
+        bool ok;
+        int quantity = quantityText.toInt(&ok);
+        if (!ok || quantity <= 0) {
+            throw ValidationException("Количество товара должно быть положительным числом");
+        }
+
+        int cellNumber = cellText.toInt(&ok);
+        if (!ok || cellNumber < 1 || cellNumber > 60) {
+            throw ValidationException("Номер ячейки должен быть числом от 1 до 60");
+        }
+
+        // Валидация текстовых полей
+        InputValidator::validateOrThrow(supplier, InputValidator::Mode::NonEmpty);
+        InputValidator::validateOrThrow(productName, InputValidator::Mode::NonEmpty);
+        InputValidator::validateOrThrow(productIndex, InputValidator::Mode::NonEmpty);
+
+        // Проверяем занятость ячейки
+        int sectionNumber = sectionCombo->currentData().toInt();
+        QString productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
+
+        QFile pFile(productsFile);
+        if (pFile.exists()) {
+            if (!pFile.open(QIODevice::ReadOnly)) {
+                throw FileException(QString("Не удалось открыть файл секции для проверки:\n%1")
+                                        .arg(pFile.errorString()));
+            }
+
+            QDataStream in(&pFile);
+            quint32 size;
+            in >> size;
+
+            if (in.status() != QDataStream::Ok) {
+                pFile.close();
+                throw FileException("Ошибка чтения данных секции для проверки");
+            }
+
+            for (quint32 i = 0; i < size; ++i) {
+                Product existingProduct;
+                in >> existingProduct;
+
+                if (in.status() != QDataStream::Ok) {
+                    pFile.close();
+                    throw FileException("Ошибка чтения товара при проверке ячейки");
+                }
+
+                if (existingProduct.getCellNumber() == cellNumber) {
+                    // Ячейка занята - проверяем совпадение данных
+                    if (existingProduct.getName() != productName ||
+                        existingProduct.getIndex() != productIndex ||
+                        existingProduct.getSupplier() != supplier) {
+                        pFile.close();
+                        throw ValidationException(
+                            QString("Ячейка %1 в секции %2 уже занята другим товаром.\n\n"
+                                    "Измените ячейку размещения или данные товара.")
+                                .arg(cellNumber).arg(sectionNumber));
+                    }
+                    break;
+                }
+            }
+            pFile.close();
+        }
+
+        // Сохраняем данные
+        saveDelivery();
+
+    } catch (const ValidationException& e) {
+        QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+    } catch (const FileException& e) {
+        QMessageBox::critical(this, "Ошибка файла", e.qmessage());
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
+    }
 }
 
 void DeliveryWindow::saveDelivery()
 {
-    QString supplier = supplierEdit->text().trimmed();
-    QDateTime deliveryDate = dateEdit->dateTime();
-    if (!dateEdit->date().isValid()) {
-        deliveryDate = QDateTime::currentDateTime();
-    }
-
-    QString productName = nameEdit->text().trimmed();
-    QString productIndex = indexEdit->text().trimmed();
-    int quantity = quantityEdit->text().toInt();
-    int sectionNumber = sectionCombo->currentData().toInt();
-    int cellNumber = cellEdit->text().toInt();
-
-    // Создаем операцию поставки
-    Operation operation(productName, productIndex, quantity,
-                        supplier, QString("Ячейка №%1").arg(cellNumber),
-                        Operation::DELIVERY, deliveryDate.date());
-
-    // Сохраняем операцию в историю
-    QString historyFile = QString("operations_history/section_history_%1.bin").arg(sectionNumber);
-    QDir().mkpath("operations_history");
-
-    QList<Operation> operations;
-    QFile hFile(historyFile);
-    if (hFile.open(QIODevice::ReadOnly)) {
-        QDataStream in(&hFile);
-        quint32 size;
-        in >> size;
-        for (quint32 i = 0; i < size; ++i) {
-            Operation op;
-            in >> op;
-            operations.append(op);
+    try {
+        QString supplier = supplierEdit->text().trimmed();
+        QDateTime deliveryDate = dateEdit->dateTime();
+        if (!dateEdit->date().isValid()) {
+            deliveryDate = QDateTime::currentDateTime();
         }
-        hFile.close();
-    }
 
-    operations.append(operation);
+        QString productName = nameEdit->text().trimmed();
+        QString productIndex = indexEdit->text().trimmed();
+        int quantity = quantityEdit->text().toInt();
+        int sectionNumber = sectionCombo->currentData().toInt();
+        int cellNumber = cellEdit->text().toInt();
 
-    if (hFile.open(QIODevice::WriteOnly)) {
+        // Создаем операцию поставки
+        Operation operation(productName, productIndex, quantity,
+                            supplier, QString("Ячейка №%1").arg(cellNumber),
+                            Operation::DELIVERY, deliveryDate.date());
+
+        // Сохраняем операцию в историю
+        QString historyFile = QString("operations_history/section_history_%1.bin").arg(sectionNumber);
+        QDir().mkpath("operations_history");
+
+        CustomList<Operation> operations;
+        QFile hFile(historyFile);
+        if (hFile.exists()) {
+            if (!hFile.open(QIODevice::ReadOnly)) {
+                throw FileException(QString("Не удалось открыть файл истории операций для чтения:\n%1")
+                                        .arg(hFile.errorString()));
+            }
+
+            QDataStream in(&hFile);
+            quint32 size;
+            in >> size;
+
+            if (in.status() != QDataStream::Ok) {
+                hFile.close();
+                throw FileException("Ошибка чтения размера истории операций");
+            }
+
+            for (quint32 i = 0; i < size; ++i) {
+                Operation op;
+                in >> op;
+
+                if (in.status() != QDataStream::Ok) {
+                    hFile.close();
+                    throw FileException(QString("Ошибка чтения операции №%1 из истории")
+                                            .arg(i + 1));
+                }
+
+                operations.append(op);
+            }
+            hFile.close();
+        }
+
+        operations.append(operation);
+
+        if (!hFile.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл истории операций для записи:\n%1")
+                                    .arg(hFile.errorString()));
+        }
+
         QDataStream out(&hFile);
         out << static_cast<quint32>(operations.size());
+
         for (const Operation& op : operations) {
             out << op;
+
+            if (out.status() != QDataStream::Ok) {
+                hFile.close();
+                throw FileException("Ошибка записи операции в историю");
+            }
         }
+
         hFile.close();
-    }
 
-    // Создаем/обновляем товар в секции
-    QString productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
-    QDir().mkpath("sections");
+        // Создаем/обновляем товар в секции
+        QString productsFile = QString("sections/section_%1.bin").arg(sectionNumber);
+        QDir().mkpath("sections");
 
-    QList<Product> products;
-    QFile pFile(productsFile);
-    if (pFile.open(QIODevice::ReadOnly)) {
-        QDataStream in(&pFile);
-        quint32 size;
-        in >> size;
-        for (quint32 i = 0; i < size; ++i) {
-            Product prod;
-            in >> prod;
-            products.append(prod);
+        CustomList<Product> products;
+        QFile pFile(productsFile);
+        if (pFile.exists()) {
+            if (!pFile.open(QIODevice::ReadOnly)) {
+                throw FileException(QString("Не удалось открыть файл товаров для чтения:\n%1")
+                                        .arg(pFile.errorString()));
+            }
+
+            QDataStream in(&pFile);
+            quint32 size;
+            in >> size;
+
+            if (in.status() != QDataStream::Ok) {
+                pFile.close();
+                throw FileException("Ошибка чтения размера списка товаров");
+            }
+
+            for (quint32 i = 0; i < size; ++i) {
+                Product prod;
+                in >> prod;
+
+                if (in.status() != QDataStream::Ok) {
+                    pFile.close();
+                    throw FileException(QString("Ошибка чтения товара №%1")
+                                            .arg(i + 1));
+                }
+
+                products.append(prod);
+            }
+            pFile.close();
         }
-        pFile.close();
-    }
 
-    // Проверяем, есть ли уже товар в этой ячейке
-    bool productExists = false;
-    for (int i = 0; i < products.size(); ++i) {
-        if (products[i].getCellNumber() == cellNumber) {
-            // Обновляем существующий товар
-            products[i].setQuantity(products[i].getQuantity() + quantity);
-            productExists = true;
-            break;
+        // Проверяем, есть ли уже товар в этой ячейке
+        bool productExists = false;
+        for (int i = 0; i < products.size(); ++i) {
+            if (products[i].getCellNumber() == cellNumber) {
+                // Обновляем существующий товар
+                products[i].setQuantity(products[i].getQuantity() + quantity);
+                productExists = true;
+                break;
+            }
         }
-    }
 
-    if (!productExists) {
-        // Добавляем новый товар
-        products.append(Product(productName, productIndex, quantity, supplier, cellNumber));
-    }
+        if (!productExists) {
+            // Добавляем новый товар
+            products.append(Product(productName, productIndex, quantity, supplier, cellNumber));
+        }
 
-    if (pFile.open(QIODevice::WriteOnly)) {
-        QDataStream out(&pFile);
-        out << static_cast<quint32>(products.size());
+        if (!pFile.open(QIODevice::WriteOnly)) {
+            throw FileException(QString("Не удалось открыть файл товаров для записи:\n%1")
+                                    .arg(pFile.errorString()));
+        }
+
+        QDataStream out2(&pFile);
+        out2 << static_cast<quint32>(products.size());
+
         for (const Product& prod : products) {
-            out << prod;
-        }
-        pFile.close();
-    }
+            out2 << prod;
 
-    QMessageBox::information(this, "Успех", "Поставка успешно оформлена!");
-    onBackClicked();
+            if (out2.status() != QDataStream::Ok) {
+                pFile.close();
+                throw FileException(QString("Ошибка записи товара '%1'")
+                                        .arg(prod.getName()));
+            }
+        }
+
+        pFile.close();
+
+        QMessageBox::information(this, "Успех", "Поставка успешно оформлена!");
+        onBackClicked();
+
+    } catch (const FileException& e) {
+        QMessageBox::critical(this, "Ошибка сохранения",
+                              QString("Не удалось сохранить данные поставки:\n%1").arg(e.qmessage()));
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
+    }
 }
 
 void DeliveryWindow::onBackClicked()
 {
-    MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
-    mainWindow->show();
-    this->close();
+    try {
+        MainWindow *mainWindow = new MainWindow(m_isAdmin, m_userManager);
+        mainWindow->show();
+        this->close();
+
+    } catch (const AppException& e) {
+        // Критическая ошибка при создании главного окна
+        QMessageBox::critical(this, "Критическая ошибка",
+                              QString("Не удалось вернуться в главное меню:\n%1\nПриложение будет закрыто.")
+                                  .arg(e.qmessage()));
+
+        // Закрываем приложение после закрытия окна с ошибкой
+        QMessageBox::StandardButton reply = QMessageBox::critical(
+            this,
+            "Закрытие приложения",
+            "Произошла критическая ошибка. Приложение будет закрыто.",
+            QMessageBox::Close
+            );
+
+        if (reply == QMessageBox::Close) {
+            qApp->quit(); // Закрываем приложение полностью
+        }
+    }
 }

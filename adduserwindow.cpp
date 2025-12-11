@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 #include "accountmanagementwindow.h"
+#include "validationexception.h"  // Добавляем заголовок
+#include "inputvalidator.h"       // Добавляем заголовок
 
 AddUserWindow::AddUserWindow(UserManager *userManager, QWidget *parent)
     : QMainWindow(parent), m_userManager(userManager)
@@ -79,72 +81,52 @@ void AddUserWindow::setupUI()
 
 void AddUserWindow::onAddUserClicked()
 {
-    QString lastName = lastNameEdit->text().trimmed();
-    QString firstName = firstNameEdit->text().trimmed();
-    QString middleName = middleNameEdit->text().trimmed();
+    try {
+        QString lastName = lastNameEdit->text().trimmed();
+        QString firstName = firstNameEdit->text().trimmed();
+        QString middleName = middleNameEdit->text().trimmed();
 
-    if (lastName.isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Поле 'Фамилия' обязательно для заполнения");
-        return;
-    }
+        // Проверка всех полей на заполненность - одна ошибка для всех
+        QList<QPair<QString, QString>> fields = {
+            {lastName, "Фамилия"},
+            {firstName, "Имя"},
+            {middleName, "Отчество"}
+        };
 
-    if (firstName.isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Поле 'Имя' обязательно для заполнения");
-        return;
-    }
+        InputValidator::validateAllFieldsNotEmptyOrThrow(fields);
 
-    if (middleName.isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Поле 'Отчество' обязательно для заполнения");
-        return;
-    }
+        // Валидация каждого поля отдельно
+        InputValidator::validateNameOrThrow(lastName, "Фамилия");
+        InputValidator::validateNameOrThrow(firstName, "Имя");
+        InputValidator::validateNameOrThrow(middleName, "Отчество");
 
-    if (lastName.length() < 2) {
-        QMessageBox::warning(this, "Ошибка", "Фамилия должна содержать минимум 2 символа");
-        return;
-    }
+        // Определяем роль
+        UserRole role;
+        QString roleText = roleCombo->currentText();
 
-    if (firstName.length() < 2) {
-        QMessageBox::warning(this, "Ошибка", "Имя должно содержать минимум 2 символа");
-        return;
-    }
+        if (roleText == "Администратор") {
+            role = UserRole::Administrator;
+        } else {
+            role = UserRole::Employee;
+        }
 
-    QRegularExpression nameRegex("^[А-Яа-яЁёA-Za-z\\s\\-]+$");
+        // Добавляем пользователя в ожидание с указанной ролью
+        bool success = m_userManager->registerPendingUser(lastName, firstName, middleName, role);
 
-    if (!nameRegex.match(lastName).hasMatch()) {
-        QMessageBox::warning(this, "Ошибка", "Фамилия может содержать только буквы, дефисы и пробелы");
-        return;
-    }
+        if (success) {
+            QMessageBox::information(this, "Успех", "Пользователь успешно добавлен в список ожидания!");
+            onBackClicked();
+        } else {
+            QMessageBox::warning(this, "Ошибка",
+                                 QString("Пользователь с ФИО '%1 %2 %3' уже существует в списке ожидания")
+                                     .arg(lastName).arg(firstName).arg(middleName));
+        }
 
-    if (!nameRegex.match(firstName).hasMatch()) {
-        QMessageBox::warning(this, "Ошибка", "Имя может содержать только буквы, дефисы и пробелы");
-        return;
-    }
-
-    if (!middleName.isEmpty() && !nameRegex.match(middleName).hasMatch()) {
-        QMessageBox::warning(this, "Ошибка", "Отчество может содержать только буквы, дефисы и пробелы");
-        return;
-    }
-
-    // Определяем роль
-    UserRole role;
-    QString roleText = roleCombo->currentText();
-
-    if (roleText == "Администратор") {
-        role = UserRole::Administrator;
-    } else {
-        role = UserRole::Employee;
-    }
-
-    // Добавляем пользователя в ожидание с указанной ролью
-    bool success = m_userManager->registerPendingUser(lastName, firstName, middleName, role);
-
-    if (success) {
-        QMessageBox::information(this, "Успех", "Пользователь успешно добавлен в список ожидания!");
-        onBackClicked();
-    } else {
-        QMessageBox::warning(this, "Ошибка",
-                             QString("Пользователь с ФИО '%1 %2 %3' уже существует в списке ожидания")
-                                 .arg(lastName).arg(firstName).arg(middleName));
+    } catch (const ValidationException& e) {
+        // Изменяем заголовок на более понятный
+        QMessageBox::warning(this, "Неверный ввод", e.qmessage());
+    } catch (const AppException& e) {
+        QMessageBox::critical(this, "Ошибка", e.qmessage());
     }
 }
 

@@ -1,3 +1,7 @@
+release/appexception.o
+release/fileexception.o
+release/filehandler.o
+release/inputvalidator.o
 release/main.o
 release/loginwindow.o
 release/registrationwindow.o
@@ -6,6 +10,7 @@ release/employee.o
 release/administrator.o
 release/usermanager.o
 release/mainwindow.o
+release/validationexception.o
 release/warehousewindow.o
 release/sectionwindow.o
 release/product.o
@@ -18,6 +23,11 @@ release/accountmanagementwindow.o
 release/adduserwindow.o
 release/deletionrecord.o
 release/deletionhistory.o
+release/appexception.o
+release/fileexception.o
+release/filehandler.o
+release/inputvalidator.o
+release/validationexception.o
 release/moc_loginwindow.o
 release/moc_registrationwindow.o
 release/moc_mainwindow.o

@@ -3,6 +3,10 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QRegularExpression>
+#include "fileexception.h"        // Добавляем
+#include "appexception.h"         // Добавляем
+#include "inputvalidator.h"
+#include "validationexception.h"
 
 RegistrationWindow::RegistrationWindow(UserManager *userManager, QWidget *parent)
     : QDialog(parent), m_userManager(userManager)
@@ -78,96 +82,62 @@ void RegistrationWindow::setupUI()
 
 void RegistrationWindow::onCompleteRegistrationClicked()
 {
-    QString lastName = lastNameEdit->text().trimmed();
-    QString firstName = firstNameEdit->text().trimmed();
-    QString middleName = middleNameEdit->text().trimmed();
-    QString login = loginEdit->text().trimmed();
-    QString password = passwordEdit->text().trimmed();
-    QString confirmPassword = confirmPasswordEdit->text().trimmed();
+    try {
+        QString lastName = lastNameEdit->text().trimmed();
+        QString firstName = firstNameEdit->text().trimmed();
+        QString middleName = middleNameEdit->text().trimmed();
+        QString login = loginEdit->text().trimmed();
+        QString password = passwordEdit->text().trimmed();
+        QString confirmPassword = confirmPasswordEdit->text().trimmed();
 
-    // ВАЛИДАЦИЯ ФИО (как в старой версии)
-    if (lastName.isEmpty() || firstName.isEmpty() || middleName.isEmpty()) {
-        statusLabel->setText("Заполните все поля ФИО");
-        return;
-    }
+        // Валидация ВСЕГО ввода на уровне UI
+        QList<QPair<QString, QString>> fields = {
+            {lastName, "Фамилия"},
+            {firstName, "Имя"},
+            {middleName, "Отчество"},
+            {login, "Логин"},
+            {password, "Пароль"},
+            {confirmPassword, "Подтверждение пароля"}
+        };
 
-    // Проверка минимальной длины (как в старой версии)
-    if (lastName.length() < 2) {
-        statusLabel->setText("Фамилия должна содержать минимум 2 символа");
-        return;
-    }
+        InputValidator::validateAllFieldsNotEmptyOrThrow(fields);
+        InputValidator::validateNameOrThrow(lastName, "Фамилия");
+        InputValidator::validateNameOrThrow(firstName, "Имя");
+        InputValidator::validateNameOrThrow(middleName, "Отчество");
 
-    if (firstName.length() < 2) {
-        statusLabel->setText("Имя должно содержать минимум 2 символа");
-        return;
-    }
+        if (password != confirmPassword) {
+            throw ValidationException("Пароли не совпадают");
+        }
 
-    // Проверка на допустимые символы (как в старой версии)
-    QRegularExpression nameRegex("^[А-Яа-яЁёA-Za-z\\s\\-]+$");
-    if (!nameRegex.match(lastName).hasMatch()) {
-        statusLabel->setText("Фамилия может содержать только буквы, дефисы и пробелы");
-        return;
-    }
+        InputValidator::validateMinLengthOrThrow(password, 4, "Пароль");
+        InputValidator::validateMinLengthOrThrow(login, 3, "Логин");
+        InputValidator::validateOrThrow(login, InputValidator::Mode::LatinAlnumHyphensUnderscore);
 
-    if (!nameRegex.match(firstName).hasMatch()) {
-        statusLabel->setText("Имя может содержать только буквы, дефисы и пробелы");
-        return;
-    }
+        // ТОЛЬКО после валидации передаем данные в UserManager
+        QString fullName = lastName + " " + firstName + " " + middleName;
 
-    if (!middleName.isEmpty() && !nameRegex.match(middleName).hasMatch()) {
-        statusLabel->setText("Отчество может содержать только буквы, дефисы и пробелы");
-        return;
-    }
+        // UserManager проверяет ТОЛЬКО бизнес-логику
+        if (m_userManager->completeRegistration(fullName, login, password)) {
+            QMessageBox::information(this, "Успех",
+                                     "Регистрация завершена успешно!\n\nТеперь вы можете войти в систему\nс вашим логином и паролем.");
+            accept();
+        } else {
+            // Этот код не должен выполняться, если все проверки прошли
+            throw ValidationException("Неизвестная ошибка при регистрации");
+        }
 
-    // ВАЛИДАЦИЯ ЛОГИНА И ПАРОЛЯ (как в старой версии)
-    if (login.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-        statusLabel->setText("Заполните все поля");
-        return;
-    }
-
-    if (password != confirmPassword) {
-        statusLabel->setText("Пароли не совпадают");
-        return;
-    }
-
-    if (password.length() < 4) {
-        statusLabel->setText("Пароль должен содержать минимум 4 символа");
-        return;
-    }
-
-    if (login.length() < 3) {
-        statusLabel->setText("Логин должен содержать минимум 3 символа");
-        return;
-    }
-
-    // Проверка на допустимые символы в логине (как в старой версии)
-    QRegularExpression loginRegex("^[A-Za-z0-9_\\-]+$");
-    if (!loginRegex.match(login).hasMatch()) {
-        statusLabel->setText("Логин может содержать только латинские буквы, цифры, дефисы и подчеркивания");
-        return;
-    }
-
-    // Проверка существования пользователя в ожидании (как в старой версии)
-    QString fullName = lastName + " " + firstName + " " + middleName;
-    if (!m_userManager->isUserInPending(fullName)) {
-        statusLabel->setText("Пользователь с такими ФИО не найден в списке ожидания");
-        return;
-    }
-
-    // Проверка, что пользователь уже не зарегистрирован (через completeRegistration)
-    // и регистрация
-    if (m_userManager->completeRegistration(fullName, login, password)) {
-        QMessageBox::information(this, "Успех",
-                                 "Регистрация завершена успешно!\n\nТеперь вы можете войти в систему\nс вашим логином и паролем.");
-        accept(); // Закрываем окно с успешным результатом
-    } else {
-        statusLabel->setText("Не удалось завершить регистрацию.\nВозможная причина:\n- Пользователь с таким логином уже существует\n- Ошибка при сохранении данных");
+    } catch (const ValidationException& e) {
+        statusLabel->setText(e.qmessage());
+    } catch (const FileException& e) {
+        statusLabel->setText("Ошибка сохранения данных: " + e.qmessage());
+    } catch (const AppException& e) {
+        statusLabel->setText("Ошибка: " + e.qmessage());
     }
 }
 
 void RegistrationWindow::onBackClicked()
 {
-    // Проверяем, были ли введены данные (как в старой версии)
+    // Проверяем, были ли введены данные
     bool hasData = !lastNameEdit->text().isEmpty() ||
                    !firstNameEdit->text().isEmpty() ||
                    !middleNameEdit->text().isEmpty() ||
@@ -175,16 +145,20 @@ void RegistrationWindow::onBackClicked()
                    !passwordEdit->text().isEmpty();
 
     if (hasData) {
-        // Показываем предупреждение о потере данных (как в старой версии)
-        QMessageBox::StandardButton reply = QMessageBox::question(
-            this,
-            "Подтверждение",
-            "Вы уверены, что хотите вернуться? Все введенные данные будут потеряны.",
-            QMessageBox::Yes | QMessageBox::No
-            );
+        try {
+            QMessageBox::StandardButton reply = QMessageBox::question(
+                this,
+                "Подтверждение",
+                "Вы уверены, что хотите вернуться? Все введенные данные будут потеряны.",
+                QMessageBox::Yes | QMessageBox::No
+                );
 
-        if (reply == QMessageBox::No) {
-            return; // Пользователь передумал
+            if (reply == QMessageBox::No) {
+                return; // Пользователь передумал
+            }
+        } catch (const std::exception& e) {
+            // Если возникла ошибка при показе диалога, просто закрываем окно
+            qWarning() << "Ошибка при отображении диалога подтверждения:" << e.what();
         }
     }
 
